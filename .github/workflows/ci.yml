@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Lets a maintainer run the publish job from a branch to rehearse it. Such a run publishes
-  # only the immutable sha tag, never the moving main/latest tags.
+  # Lets a maintainer rehearse the publish job by hand. A dispatch run publishes only the
+  # immutable sha tag, never the moving main/latest tags.
   workflow_dispatch:
 
 # Least privilege by default; only the publish job below is granted anything more.
@@ -124,10 +124,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
+          # sha-<short> is immutable and always published. The moving tags are published only for
+          # a real push to main: a manual dispatch (even on main) must never move them.
           tags: |
-            type=sha,prefix=sha-,format=short
-            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=sha-${{ steps.version.outputs.short }}
+            type=raw,value=main,enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
 
       # One multi-platform build: the arm64 binary is cross-compiled, so no emulation is needed.
       # The layer cache was already warmed by the docker job above.
