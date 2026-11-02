@@ -75,8 +75,13 @@ loginctl enable-linger "$USER"      # keep the timer running when nobody is logg
      the rollback target.
 4. `GET /healthz` reports the commit that is running (`"version"`).
 
-`update.sh` exit codes: `0` up to date or deployed, `1` deploy failed and was rolled back, `2` deploy
-failed and could not be rolled back (needs a person).
+`update.sh` exit codes: `0` up to date, deployed, or skipped because that exact image already failed;
+`1` deploy failed and was rolled back; `2` deploy failed and could not be rolled back (needs a
+person); `3` the registry could not be reached (the current version keeps running; reported once per
+outage).
+
+A failed image is remembered in `~/.local/state/shadowcommit/failed-image` and is not retried until
+the registry serves a different one. Delete that file to retry the same image on purpose.
 
 ## Day-to-day operations
 
