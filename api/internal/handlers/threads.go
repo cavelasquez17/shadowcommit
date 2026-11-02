@@ -3,10 +3,11 @@ package handlers
 import (
 	"errors"
 
-	"github.com/go-playground/validator/v10"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
