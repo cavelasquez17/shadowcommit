@@ -13,7 +13,7 @@ api/api
 
 # Not needed to build or run.
 .screens
-*.md
+**/*.md
 LICENSE
 .vscode
 .idea
