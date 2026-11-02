@@ -17,7 +17,8 @@ if out=$(docker run --rm "$IMAGE" 2>&1); then fail "container started without JW
 grep -q "default JWT_SECRET" <<<"$out" || fail "unexpected failure output: $out"
 
 echo "2/6 boots with a secret"
-docker run -d --name "$NAME" -e JWT_SECRET=smoke-test-secret \
+docker run -d --name "$NAME" --health-interval=2s --health-start-period=1s \
+  -e JWT_SECRET=smoke-test-secret \
   -e WEB_BASE_URL="http://localhost:$PORT" -e APP_BASE_URL="http://localhost:$PORT" \
   -p "127.0.0.1:$PORT:8080" "$IMAGE" >/dev/null
 
@@ -31,18 +32,22 @@ grep -q '"status":"alive"' <<<"${health:-}" || fail "healthz did not answer: ${h
 grep -q '"version":"' <<<"$health" || fail "healthz has no version: $health"
 
 echo "4/6 serves the SPA, the API, and keeps the JSON 404"
-code() { curl -s -o /dev/null -w '%{http_code} %{content_type}' "http://127.0.0.1:$PORT$1"; }
-[[ "$(code /)" == "200 text/html"* ]] || fail "/ is not the SPA: $(code /)"
-[[ "$(code /feed)" == "200 text/html"* ]] || fail "/feed is not the SPA shell: $(code /feed)"
-[[ "$(code /api/meta)" == "200 application/json"* ]] || fail "/api/meta: $(code /api/meta)"
-[[ "$(code /api/nope)" == "404 application/json"* ]] || fail "/api/nope: $(code /api/nope)"
+expect() { # expect <path> <status+type prefix>
+  local got
+  got=$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "http://127.0.0.1:$PORT$1")
+  [[ "$got" == "$2"* ]] || fail "GET $1: got '$got', want '$2...'"
+}
+expect / "200 text/html"
+expect /feed "200 text/html"       # client route falls back to the SPA shell
+expect /api/meta "200 application/json"
+expect /api/nope "404 application/json"
 
 echo "5/6 docker HEALTHCHECK turns healthy"
 status=starting
-for _ in $(seq 1 40); do
+for _ in $(seq 1 60); do
   status=$(docker inspect --format '{{.State.Health.Status}}' "$NAME")
   [ "$status" = healthy ] && break
-  sleep 3
+  sleep 1
 done
 [ "$status" = healthy ] || fail "container health is '$status'"
 
