@@ -5,7 +5,7 @@
 FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 COPY web/ ./
 RUN npm run build
 
@@ -17,20 +17,26 @@ ARG BUILDARCH
 ARG TARGETARCH
 ARG VERSION=dev
 RUN set -eux; \
-    if [ "$TARGETARCH" = "$BUILDARCH" ]; then CC=gcc; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-        apt-get update && apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
-        && CC=aarch64-linux-gnu-gcc; \
-    elif [ "$TARGETARCH" = "amd64" ]; then \
-        apt-get update && apt-get install -y --no-install-recommends gcc-x86-64-linux-gnu libc6-dev-amd64-cross \
-        && CC=x86_64-linux-gnu-gcc; \
-    else echo "unsupported TARGETARCH=$TARGETARCH" >&2; exit 1; fi; \
-    echo "$CC" > /cc; rm -rf /var/lib/apt/lists/*
+    case "$TARGETARCH" in \
+        arm64) triplet=aarch64-linux-gnu; libc=arm64 ;; \
+        amd64) triplet=x86_64-linux-gnu; libc=amd64 ;; \
+        *) echo "unsupported TARGETARCH=$TARGETARCH" >&2; exit 1 ;; \
+    esac; \
+    if [ "$TARGETARCH" = "$BUILDARCH" ]; then echo gcc > /cc; \
+    else \
+        apt-get update; \
+        apt-get install -y --no-install-recommends "gcc-$triplet" "libc6-dev-$libc-cross"; \
+        rm -rf /var/lib/apt/lists/*; \
+        echo "$triplet-gcc" > /cc; \
+    fi
 WORKDIR /src/api
 COPY api/go.mod api/go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY api/ ./
-RUN CC="$(cat /cc)" CGO_ENABLED=1 GOOS=linux GOARCH="$TARGETARCH" \
+# Cache mounts keep the module and compiler caches between builds, so a source change does
+# not recompile go-sqlite3's C code from scratch.
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    CC="$(cat /cc)" CGO_ENABLED=1 GOOS=linux GOARCH="$TARGETARCH" \
     go build -trimpath -ldflags "-s -w -X github.com/cavelasquez17/shadowcommit/api/internal/config.Version=${VERSION}" -o /out/shadowcommit ./cmd/api \
  && mkdir -p /out/data
 
@@ -41,6 +47,8 @@ FROM gcr.io/distroless/base-debian12:nonroot
 WORKDIR /app
 COPY --from=api /out/shadowcommit /app/shadowcommit
 COPY --from=web /web/dist /app/web
+# distroless has no shell to mkdir with, so /data is created in the build stage; 65532 is the
+# uid of the image's `nonroot` user and must own it for SQLite to write.
 COPY --from=api --chown=65532:65532 /out/data /data
 
 # Secrets (JWT_SECRET, GitHub OAuth) are deliberately NOT set here: in production the app
