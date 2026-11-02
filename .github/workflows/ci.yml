@@ -119,6 +119,10 @@ jobs:
           cp .env.example .env
           echo "SHADOWCOMMIT_DOMAIN=ci.example.org" >> .env
           docker compose config --quiet
+          # A single host name must drive all three public URLs.
+          docker compose config | grep -q 'APP_BASE_URL: https://ci.example.org'
+          docker compose config | grep -q 'WEB_BASE_URL: https://ci.example.org'
+          docker compose config | grep -q 'CORS_ORIGINS: https://ci.example.org'
 
       - name: Validate the Caddyfile
         run: >

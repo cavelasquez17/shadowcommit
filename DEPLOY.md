@@ -42,8 +42,8 @@ cd ~/shadowcommit/deploy
 
 cp .env.example .env
 chmod 600 .env
-# Fill in .env: SHADOWCOMMIT_DOMAIN, APP_BASE_URL, WEB_BASE_URL, CORS_ORIGINS (all https://<your-subdomain>),
-# GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET, and a fresh secret:
+# Fill in .env: SHADOWCOMMIT_DOMAIN (<your-subdomain>, no https://), GITHUB_CLIENT_ID /
+# GITHUB_CLIENT_SECRET, and a fresh secret:
 openssl rand -hex 32        # paste as JWT_SECRET
 
 docker compose up -d
@@ -121,6 +121,6 @@ volume as the only copy.
 | Browser cannot connect | Ports 80/443 not open in the cloud rules or the host firewall |
 | Certificate error right after the first start | DNS not pointing at the host yet; Caddy retries on its own, see `docker logs shadowcommit-caddy` |
 | App container restarts, log says it refuses to boot | `JWT_SECRET` missing or still the default, or `DEV_LOGIN` set |
-| Login with GitHub fails | OAuth callback URL or `*_BASE_URL` does not match the public https origin |
+| Login with GitHub fails | The OAuth app's callback URL does not match `https://<your-subdomain>/api/auth/github/callback` |
 | `update.sh` exits 2 | The new image is unhealthy and the rollback also failed: inspect `docker logs shadowcommit-app` |
 | Update never happens | Package is still private (the host cannot pull) or the timer is not enabled |
