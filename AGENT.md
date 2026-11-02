@@ -223,15 +223,18 @@ Proceed without asking when: the change is additive, follows existing precedent,
 
 ## Git
 
-- Branch from `main`. Branch names: `feat/…`, `fix/…`, `chore/…`, kebab-case.
-- Conventional commits scoped by area: `feat(threads): …`, `fix(auth): …`, `refactor(store): …`. Imperative, lowercase subject; body explains why.
-- Never commit or push to `main` directly; everything via PR.
+- Branch from a fresh `main`. Names: `feat/…`, `fix/…`, `chore/…`, `refactor/…`, `test/…`, `docs/…`, `ci/…`; kebab-case.
+- Conventional commits: `type(scope): subject` with types `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`. Imperative, lowercase subject; the body explains why (the root cause, for fixes).
+- **Every step is its own commit and every fix is its own commit**, so the history shows how the work happened. No "misc" commits.
+- Never commit or push to `main` directly; everything goes through a PR that follows the template. Merge commits only: no squash, no force-push, no rewriting pushed history.
 - Stage files by explicit path — never `git add -A` or `git commit -a`.
+- **Authorship:** commits are authored by the repository owner under their own git identity. Do not add `Co-Authored-By` or any tool-attribution trailer to commits or PR descriptions. Check with `git log --format='%an <%ae>'` before pushing.
+- Issues, PRs and commit messages are written in English. The roadmap is tracked in issue #14; link new work to it.
 - Only push to `https://github.com/cavelasquez17/shadowcommit` (personal repo).
 
 ## Go style
 
-- `t.Parallel()` at the top of every test and inside `t.Run` closures.
+- `t.Parallel()` at the top of every test and inside `t.Run` closures — except tests that use `t.Setenv` (Go forbids it) or depend on shared global state or timing.
 - Go 1.22 range: `for i := range n` instead of `for i := 0; i < n; i++`. Drop unused index: `for range n`.
 - No `Get` prefix on getters. `Owner()`, not `GetOwner()`.
 - Boolean functions: `Is`/`Has`/`Can`/`Should` prefix. Name positively: `IsEmployed`, not `IsNotEmployed`.
