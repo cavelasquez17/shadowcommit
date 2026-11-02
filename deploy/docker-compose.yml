@@ -33,16 +33,11 @@ services:
     # The host also runs other workloads on a single small CPU: keep this service bounded.
     mem_limit: 512m
     cpus: 0.5
-    networks:
-      - internal
 
   caddy:
     container_name: shadowcommit-caddy
     image: caddy:2
     restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_healthy
     environment:
       SHADOWCOMMIT_DOMAIN: ${SHADOWCOMMIT_DOMAIN:?set SHADOWCOMMIT_DOMAIN in .env}
     ports:
@@ -54,11 +49,6 @@ services:
       - caddy-config:/config
     mem_limit: 128m
     cpus: 0.25
-    networks:
-      - internal
-
-networks:
-  internal:
 
 volumes:
   shadowcommit-data:
