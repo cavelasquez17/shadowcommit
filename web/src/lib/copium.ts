@@ -104,8 +104,10 @@ const COPIUM_MAP: [RegExp, string][] = [
   [/\bconfesión\b/gi, 'testimonio inspirador'],
   [/\bincidente\b/gi, 'poderoso momento de aprendizaje'],
   [/\bhachazo\b/gi, 'optimización organizacional estratégica'],
-  [/\bmurió\b/gi, 'pivotó hacia nuevos horizontes'],
-  [/\bmató\b/gi, 'disrumpió creativamente'],
+  // \b only knows ASCII letters, so it never matches right after an accented vowel; use a
+  // Unicode-aware lookahead for words that end in one.
+  [/\bmurió(?!\p{L})/giu, 'pivotó hacia nuevos horizontes'],
+  [/\bmató(?!\p{L})/giu, 'disrumpió creativamente'],
   [/\bmuerto\b/gi, 'pivotado hacia nuevas oportunidades'],
   [/\bquejas\b/gi, 'testimonios constructivos'],
   [/\bqueja\b/gi, 'testimonio constructivo'],
