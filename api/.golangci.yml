@@ -12,7 +12,6 @@ linters:
     - exhaustive
     - fatcontext
     - gocheckcompilerdirectives
-    - goconst
     - goprintffuncname
     - iface
     - intrange
@@ -36,8 +35,9 @@ linters:
     - whitespace
   exclusions:
     rules:
-      # Test helpers (decodeJSON, postJSON, mustGet) own and close response bodies, but
-      # bodyclose cannot see through them and reports every call. It stays on for real code.
+      # In tests, bodies are closed by decodeJSON or by an explicit Close, through generic
+      # helpers that bodyclose cannot follow, so it reports nearly every request. Real leaks in
+      # test code are therefore not caught; the rule stays on for production code.
       - path: _test\.go
         linters:
           - bodyclose
@@ -45,13 +45,10 @@ linters:
     errcheck:
       exclude-functions:
         - "(io.Closer).Close"
-      verbose: true
     exhaustive:
       check:
         - switch
         - map
-    goconst:
-      min-occurrences: 100
 formatters:
   enable:
     - gofmt
