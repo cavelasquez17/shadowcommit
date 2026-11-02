@@ -131,8 +131,9 @@ type paginated[T any] struct {
 	Total int64 `json:"total"`
 }
 
-// toUserResponse maps a user. viewer may be nil for anonymous requests.
-func toUserResponse(u *models.User, viewer *models.User) *userResponse {
+// toUserResponse maps a user to its public shape. Callers that need viewer-specific fields
+// (follow state, can-edit) add them afterwards.
+func toUserResponse(u *models.User) *userResponse {
 	if u == nil {
 		return nil
 	}
@@ -251,7 +252,7 @@ type jobPostingResponse struct {
 	PostedBy    *userResponse `json:"posted_by,omitempty"`
 }
 
-func toJobPostingResponse(j *models.JobPosting, viewer *models.User) *jobPostingResponse {
+func toJobPostingResponse(j *models.JobPosting) *jobPostingResponse {
 	r := &jobPostingResponse{
 		ID:          j.PublicID,
 		CreatedAt:   j.CreatedAt,
@@ -272,7 +273,7 @@ func toJobPostingResponse(j *models.JobPosting, viewer *models.User) *jobPosting
 		ViewCount:   j.ViewCount,
 	}
 	if j.PostedBy != nil {
-		r.PostedBy = toUserResponse(j.PostedBy, viewer)
+		r.PostedBy = toUserResponse(j.PostedBy)
 	}
 	return r
 }

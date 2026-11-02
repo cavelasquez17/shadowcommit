@@ -279,7 +279,7 @@ func (a *API) toThreadResponse(t *models.Thread, viewer *models.User) *threadRes
 		Sarcasm: t.Sarcasm, IsPinned: t.IsPinned, IsLocked: t.IsLocked,
 		NSFWCorporate: t.NSFWCorporate, ViewCount: t.ViewCount, PostCount: t.PostCount,
 		ReactionCount: t.ReactionCount, HotScore: t.HotScore, CreatedAt: t.CreatedAt,
-		LastPostAt: t.LastPostAt, Author: toUserResponse(t.Author, viewer),
+		LastPostAt: t.LastPostAt, Author: toUserResponse(t.Author),
 		Category: toCategoryDTO(t.Category), Tags: toTagDTOs(t.Tags),
 		Reactions: a.reactionSummaries("thread", t.ID, viewer),
 	}

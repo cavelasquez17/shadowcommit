@@ -265,7 +265,7 @@ func (a *API) devLogin(c *gin.Context) {
 		return
 	}
 	a.iss.SetCookie(c, token)
-	c.JSON(http.StatusOK, gin.H{"user": toUserResponse(&u, nil), "is_new": isNew})
+	c.JSON(http.StatusOK, gin.H{"user": toUserResponse(&u), "is_new": isNew})
 }
 
 // logout clears the session. Unlike a layoff, this one is reversible.
@@ -283,7 +283,7 @@ func (a *API) me(c *gin.Context) {
 	}
 	var unread int64
 	a.db.Model(&models.Notification{}).Where("user_id = ? AND is_read = ?", u.ID, false).Count(&unread)
-	c.JSON(http.StatusOK, gin.H{"user": toUserResponse(u, nil), "unread_notifications": unread})
+	c.JSON(http.StatusOK, gin.H{"user": toUserResponse(u), "unread_notifications": unread})
 }
 
 // uniqueUsername appends a numeric suffix until the handle is free.
