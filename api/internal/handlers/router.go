@@ -27,11 +27,7 @@ func (a *API) Router() *gin.Engine {
 	}))
 
 	r.GET("/healthz", func(c *gin.Context) {
-		version := a.cfg.Version
-		if version == "" {
-			version = "dev"
-		}
-		c.JSON(http.StatusOK, gin.H{"status": "alive", "unlike": "your role", "version": version})
+		c.JSON(http.StatusOK, gin.H{"status": "alive", "unlike": "your role", "version": a.cfg.Version})
 	})
 
 	api := r.Group("/api")

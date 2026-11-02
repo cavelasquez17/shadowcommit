@@ -31,7 +31,7 @@ COPY api/go.mod api/go.sum ./
 RUN go mod download
 COPY api/ ./
 RUN CC="$(cat /cc)" CGO_ENABLED=1 GOOS=linux GOARCH="$TARGETARCH" \
-    go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/shadowcommit ./cmd/api \
+    go build -trimpath -ldflags "-s -w -X github.com/cavelasquez17/shadowcommit/api/internal/config.Version=${VERSION}" -o /out/shadowcommit ./cmd/api \
  && mkdir -p /out/data
 
 # ---- runtime: minimal, non-root, no shell ---------------------------------------------------

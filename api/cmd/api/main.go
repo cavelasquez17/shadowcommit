@@ -23,9 +23,6 @@ import (
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 )
 
-// version is set at link time: go build -ldflags "-X main.version=<sha>".
-var version = "dev"
-
 func main() {
 	// Load .env if present — silently ignored if not.
 	_ = godotenv.Load()
@@ -43,7 +40,6 @@ func main() {
 	}
 
 	cfg := config.Load()
-	cfg.Version = version
 
 	db, err := store.Open(cfg)
 	if err != nil {
