@@ -17,6 +17,13 @@ jobs:
         with:
           go-version-file: api/go.mod
           cache-dependency-path: api/go.sum
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          # Pinned so a new release cannot break CI; bump it in its own PR.
+          version: v2.14.0
+          working-directory: api
+          args: --timeout=5m
       - run: go vet ./...
       - run: go test ./...
 
