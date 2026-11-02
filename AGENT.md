@@ -111,6 +111,10 @@ scripts/smoke-container.sh shadowcommit:local 18080 local
 10. **`SkipDefaultTransaction: true`** is set in GORM config. Wrap multi-operation writes in `db.Transaction(func(tx *gorm.DB) error { ... })` explicitly.
 11. **Never commit `.env` files, `shadowcommit.db`, or `node_modules`.**
 12. **Copium mode** is a per-device UI toggle (localStorage `sc_copium`) that tints the whole document via `data-copium` attribute on `<html>`. It is not per-account.
+13. **User text is hostile.** The only place HTML is built from user text is `renderMarkdown` (it escapes first). Never add another `dangerouslySetInnerHTML`. Build SQL `LIKE` patterns with `escapeLike`, never by concatenating raw input (known gap: the member directory and user search, tracked in #46).
+14. **One source of truth for config.** Defaults live in `internal/config` (`Port()`, `Version`). Do not re-read env vars or duplicate defaults elsewhere.
+15. **Nothing host-specific in the repo.** No server addresses, usernames, security-group details, tokens or API keys in code, docs, issues or PRs. Reference them as placeholders.
+16. **Background jobs must be safe to repeat.** Scheduled jobs are idempotent, recover from panics and stop on shutdown (`internal/jobs`).
 
 ## Design language
 
