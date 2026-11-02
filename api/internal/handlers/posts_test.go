@@ -52,15 +52,18 @@ func TestCreatePostValidationAndErrors(t *testing.T) {
 		{"unknown thread", "/api/threads/thr_nope/posts", map[string]any{"body": "hello there"}, http.StatusNotFound},
 		{"unknown parent", "/api/threads/" + tid + "/posts", map[string]any{"body": "hello there", "parent_id": "pst_nope"}, http.StatusBadRequest},
 	}
-	for _, tc := range cases { //nolint:paralleltest // assertions after the loop need every subtest to have finished
-		t.Run(tc.name, func(t *testing.T) {
-			resp := postJSON(t, c, ts.URL+tc.url, tc.body)
-			defer resp.Body.Close()
-			if resp.StatusCode != tc.want {
-				t.Errorf("got %d, want %d", resp.StatusCode, tc.want)
-			}
-		})
-	}
+	t.Run("rejected", func(t *testing.T) {
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+				resp := postJSON(t, c, ts.URL+tc.url, tc.body)
+				defer resp.Body.Close()
+				if resp.StatusCode != tc.want {
+					t.Errorf("got %d, want %d", resp.StatusCode, tc.want)
+				}
+			})
+		}
+	})
 	if got := threadByID(t, db, tid).PostCount; got != 0 {
 		t.Errorf("rejected replies must not bump post_count, got %d", got)
 	}

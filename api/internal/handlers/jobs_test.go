@@ -83,15 +83,18 @@ func TestCreateJobValidation(t *testing.T) {
 		{"company too short", map[string]any{"company": "x"}},
 		{"country code too long", map[string]any{"country_code": "COL"}},
 	}
-	for _, tc := range cases { //nolint:paralleltest // assertions after the loop need every subtest to have finished
-		t.Run(tc.name, func(t *testing.T) {
-			resp := postJSON(t, c, ts.URL+"/api/jobs", jobBody("Valid Co", tc.extra))
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusBadRequest {
-				t.Errorf("got %d, want 400", resp.StatusCode)
-			}
-		})
-	}
+	t.Run("rejected", func(t *testing.T) {
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+				resp := postJSON(t, c, ts.URL+"/api/jobs", jobBody("Valid Co", tc.extra))
+				defer resp.Body.Close()
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("got %d, want 400", resp.StatusCode)
+				}
+			})
+		}
+	})
 	if got := listJobs(t, ts.URL, "").Total; got != 0 {
 		t.Errorf("rejected postings must not be stored, got %d", got)
 	}
