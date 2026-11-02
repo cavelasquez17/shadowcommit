@@ -35,11 +35,7 @@ func main() {
 	flag.Parse()
 
 	if *healthcheck {
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "8080"
-		}
-		if err := runHealthcheck(healthClient(), "http://127.0.0.1:"+port+"/healthz"); err != nil {
+		if err := runHealthcheck("http://127.0.0.1:"+config.Port()+"/healthz", 3*time.Second); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

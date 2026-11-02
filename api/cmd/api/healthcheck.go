@@ -8,8 +8,9 @@ import (
 
 // runHealthcheck GETs url and returns nil only for a 200 response. It exists so the
 // container image can ship without curl or wget: HEALTHCHECK runs `api -healthcheck`.
-func runHealthcheck(client *http.Client, url string) error {
-	resp, err := client.Get(url)
+// The timeout is required so a hung server can never hang the probe.
+func runHealthcheck(url string, timeout time.Duration) error {
+	resp, err := (&http.Client{Timeout: timeout}).Get(url)
 	if err != nil {
 		return fmt.Errorf("healthcheck request failed: %w", err)
 	}
@@ -18,8 +19,4 @@ func runHealthcheck(client *http.Client, url string) error {
 		return fmt.Errorf("healthcheck got status %d", resp.StatusCode)
 	}
 	return nil
-}
-
-func healthClient() *http.Client {
-	return &http.Client{Timeout: 3 * time.Second}
 }

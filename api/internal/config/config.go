@@ -40,6 +40,10 @@ func env(key, fallback string) string {
 	return fallback
 }
 
+// Port returns the listen port. It is exported so the container healthcheck probes the
+// same port, with the same default and trimming, that the server binds.
+func Port() string { return env("PORT", "8080") }
+
 func envBool(key string, fallback bool) bool {
 	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
 	switch v {
@@ -54,7 +58,7 @@ func envBool(key string, fallback bool) bool {
 // Load reads config from the environment, applying local-friendly defaults.
 func Load() *Config {
 	c := &Config{
-		Port:               env("PORT", "8080"),
+		Port:               Port(),
 		Env:                env("APP_ENV", "development"),
 		DBDriver:           env("DB_DRIVER", "sqlite"),
 		DSN:                env("DATABASE_URL", "shadowcommit.db"),
