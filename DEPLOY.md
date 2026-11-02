@@ -70,7 +70,9 @@ loginctl enable-linger "$USER"      # keep the timer running when nobody is logg
 3. Within about two minutes the host's timer runs `deploy/update.sh`:
    - same image as the running one → nothing happens;
    - new image → recreate, wait up to 90 s for the health check;
-   - unhealthy → the previous image is restored automatically.
+   - unhealthy, or the containers fail to start → the previous image is restored automatically.
+     It is kept under the local tag `shadowcommit:previous`, so a `docker image prune` cannot delete
+     the rollback target.
 4. `GET /healthz` reports the commit that is running (`"version"`).
 
 `update.sh` exit codes: `0` up to date or deployed, `1` deploy failed and was rolled back, `2` deploy
@@ -96,7 +98,7 @@ systemctl --user disable --now shadowcommit-update.timer
 
 ### Roll back by hand
 
-Pin a known-good image (a `sha-<short>` tag from the registry) and stop the timer so it does not
+Pin a known-good image (`shadowcommit:previous`, or a `sha-<short>` tag from the registry) and stop the timer so it does not
 move forward again:
 
 ```bash
@@ -106,6 +108,18 @@ SHADOWCOMMIT_IMAGE=ghcr.io/<owner>/shadowcommit:sha-<short> docker compose up -d
 ```
 
 Re-enable the timer when the fix is merged.
+
+### Notifications (optional)
+
+`update.sh` can report deploys, failures and rollbacks. Put the path of a script in
+`~/shadowcommit/deploy/update.env` and the systemd service loads it:
+
+```bash
+NOTIFY_CMD=/path/to/your/notify-script   # called with ONE argument: the message
+```
+
+A failing notifier never breaks a deploy. Without it, everything is still in the journal
+(`journalctl --user -u shadowcommit-update.service`).
 
 ## Data and backups
 

@@ -44,6 +44,8 @@ ShadowCommit is a satirical social platform where developers declare a "cause of
 ├── workflows/ci.yml             # api, web, docker jobs
 └── pull_request_template.md     # every PR follows this structure
 Dockerfile, .dockerignore        # production image (see Deployment)
+deploy/                          # compose stack, Caddyfile, update.sh (+ tests), systemd units
+DEPLOY.md                        # deployment runbook
 scripts/smoke-container.sh       # boots a built image and checks it end to end
 api/
 ├── cmd/api/                     # main.go (flags, scheduler wiring, graceful shutdown), healthcheck.go
@@ -179,7 +181,7 @@ These need extra care. Change them only in a dedicated, single-purpose PR, say i
 ## Deployment
 
 - The image is built in CI; the host is a small ARM64 VM with limited CPU, so it never compiles anything.
-- The host **pulls** new images (it is not reachable from CI runners), then checks the container health and rolls back on failure. Details are tracked in the deployment issues; host addresses, users and firewall rules are **not** documented in this repository.
+- The host **pulls** new images (it is not reachable from CI runners), then checks the container health and rolls back on failure. The runbook is `DEPLOY.md`; host addresses, users and firewall rules are **not** documented in this repository.
 - Production requires: a real `JWT_SECRET`, a GitHub OAuth app, `DEV_LOGIN` off, `WEB_BASE_URL`/`APP_BASE_URL`/`CORS_ORIGINS` set to the public origin, and `/data` on a named volume (a bind mount needs `chown 65532`).
 - `/healthz` reports the stamped build version; use it to confirm what is running.
 
