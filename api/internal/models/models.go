@@ -281,17 +281,17 @@ type JobPosting struct {
 	PostedByID uint  `gorm:"index;not null" json:"-"`
 	PostedBy   *User `gorm:"foreignKey:PostedByID" json:"posted_by,omitempty"`
 
-	Company    string `gorm:"size:120;not null" json:"company"`
-	Title      string `gorm:"size:200;not null" json:"title"`
-	Body       string `gorm:"type:text;not null" json:"body"`
-	ApplyURL   string `gorm:"size:512;not null" json:"apply_url"`
-	Location   string `gorm:"size:120" json:"location"`
-	Remote     bool   `gorm:"not null" json:"remote"`
+	Company     string `gorm:"size:120;not null" json:"company"`
+	Title       string `gorm:"size:200;not null" json:"title"`
+	Body        string `gorm:"type:text;not null" json:"body"`
+	ApplyURL    string `gorm:"size:512;not null" json:"apply_url"`
+	Location    string `gorm:"size:120" json:"location"`
+	Remote      bool   `gorm:"not null" json:"remote"`
 	CountryCode string `gorm:"size:2;index" json:"country_code"`
 
-	SalaryMin  *int   `json:"salary_min"`
-	SalaryMax  *int   `json:"salary_max"`
-	Currency   string `gorm:"size:3;default:USD" json:"currency"`
+	SalaryMin *int   `json:"salary_min"`
+	SalaryMax *int   `json:"salary_max"`
+	Currency  string `gorm:"size:3;default:USD" json:"currency"`
 
 	Seniority Seniority `gorm:"size:24;index" json:"seniority"`
 	Language  string    `gorm:"size:8;index;default:en" json:"language"`

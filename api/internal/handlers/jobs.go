@@ -224,9 +224,9 @@ func (a *API) jobStats(c *gin.Context) {
 		Scan(&bySeniority)
 
 	c.JSON(http.StatusOK, gin.H{
-		"open":          openCount,
-		"sponsored":     sponsoredCount,
-		"by_seniority":  bySeniority,
-		"posted_ago":    time.Now().Format(time.RFC3339),
+		"open":         openCount,
+		"sponsored":    sponsoredCount,
+		"by_seniority": bySeniority,
+		"posted_ago":   time.Now().Format(time.RFC3339),
 	})
 }

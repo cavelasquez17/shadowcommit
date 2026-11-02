@@ -231,23 +231,23 @@ func isHTTPURL(s string) bool {
 
 // jobPostingResponse is the public shape of a job listing.
 type jobPostingResponse struct {
-	ID          string     `json:"id"`
-	CreatedAt   time.Time  `json:"created_at"`
-	Company     string     `json:"company"`
-	Title       string     `json:"title"`
-	Body        string     `json:"body"`
-	ApplyURL    string     `json:"apply_url"`
-	Location    string     `json:"location"`
-	Remote      bool       `json:"remote"`
-	CountryCode string     `json:"country_code"`
-	SalaryMin   *int       `json:"salary_min"`
-	SalaryMax   *int       `json:"salary_max"`
-	Currency    string     `json:"currency"`
-	Seniority   string     `json:"seniority"`
-	Language    string     `json:"language"`
-	IsSponsored bool       `json:"is_sponsored"`
-	IsFilled    bool       `json:"is_filled"`
-	ViewCount   int        `json:"view_count"`
+	ID          string        `json:"id"`
+	CreatedAt   time.Time     `json:"created_at"`
+	Company     string        `json:"company"`
+	Title       string        `json:"title"`
+	Body        string        `json:"body"`
+	ApplyURL    string        `json:"apply_url"`
+	Location    string        `json:"location"`
+	Remote      bool          `json:"remote"`
+	CountryCode string        `json:"country_code"`
+	SalaryMin   *int          `json:"salary_min"`
+	SalaryMax   *int          `json:"salary_max"`
+	Currency    string        `json:"currency"`
+	Seniority   string        `json:"seniority"`
+	Language    string        `json:"language"`
+	IsSponsored bool          `json:"is_sponsored"`
+	IsFilled    bool          `json:"is_filled"`
+	ViewCount   int           `json:"view_count"`
 	PostedBy    *userResponse `json:"posted_by,omitempty"`
 }
 
