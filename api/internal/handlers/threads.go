@@ -50,8 +50,11 @@ func (a *API) listThreads(c *gin.Context) {
 		q = q.Where("users.username = ?", strings.ToLower(v))
 	}
 	if v := strings.TrimSpace(c.Query("q")); v != "" {
-		like := "%" + strings.ToLower(v) + "%"
-		q = q.Where("LOWER(threads.title) LIKE ? OR LOWER(threads.body) LIKE ?", like, like)
+		like := "%" + escapeLike(strings.ToLower(v)) + "%"
+		q = q.Where(`(LOWER(threads.title) LIKE ? ESCAPE '\' OR LOWER(threads.body) LIKE ? ESCAPE '\'
+			OR EXISTS (SELECT 1 FROM posts WHERE posts.thread_id = threads.id
+				AND posts.deleted_at IS NULL AND LOWER(posts.body) LIKE ? ESCAPE '\'))`,
+			like, like, like)
 	}
 
 	var total int64
@@ -366,4 +369,10 @@ func (a *API) listTags(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"items": toTagDTOs(tags)})
+}
+
+// escapeLike makes user input literal inside a LIKE pattern, so searching "100%" or
+// "snake_case" does not turn the percent sign or underscore into wildcards.
+func escapeLike(s string) string {
+	return strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(s)
 }
