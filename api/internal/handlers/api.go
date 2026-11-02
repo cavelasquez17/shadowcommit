@@ -4,6 +4,7 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"golang.org/x/text/unicode/norm"
 	"log"
 	"net/http"
 	"regexp"
@@ -96,7 +97,13 @@ var (
 // the public ID is what actually routes.
 func slugify(s string) string {
 	var b strings.Builder
-	for _, r := range strings.ToLower(s) {
+	// Decompose accents (ó -> o + combining mark) and drop the marks, so "qué" becomes
+	// "que" instead of losing the letter entirely.
+	decomposed := norm.NFD.String(strings.ToLower(s))
+	for _, r := range decomposed {
+		if unicode.Is(unicode.Mn, r) {
+			continue
+		}
 		switch {
 		case unicode.IsLetter(r) && r < unicode.MaxASCII, unicode.IsDigit(r) && r < unicode.MaxASCII:
 			b.WriteRune(r)
