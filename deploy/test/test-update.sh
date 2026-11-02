@@ -16,7 +16,7 @@ new_case() {
   CASE="$1"
   FAKE_DIR=$(mktemp -d)
   export FAKE_DIR DOCKER="$HERE/fake-docker" DEPLOY_DIR="$FAKE_DIR" LOCK_FILE="$FAKE_DIR/lock"
-  export HEALTH_TIMEOUT=2
+  export HEALTH_TIMEOUT=2 STATE_DIR="$FAKE_DIR/state"
   unset NOTIFY_CMD SHADOWCOMMIT_IMAGE FAKE_PRUNE_OLD FAKE_UP_FAILS
   echo "sha256:new" > "$FAKE_DIR/registry_image"
   echo "sha256:aaaaaaa0001" > "$FAKE_DIR/revision"
@@ -86,6 +86,21 @@ set_running sha256:old; run
 check "exits 1 (rolled back), not an abort" test "$RC" -eq 1
 check "still runs the previous image" test "$(running)" = sha256:old
 check "reports the rollback" out_has 'rolled back'
+
+new_case "a bad image is not retried on every tick"
+set_running sha256:old; set_health sha256:new unhealthy; run
+check "first run rolls back (exit 1)" test "$RC" -eq 1
+ups_after_first=$(called 'compose up')
+run
+check "second run does nothing (exit 0)" test "$RC" -eq 0
+check "says it already failed" out_has 'already failed'
+check "did not recreate the app again" test "$(called 'compose up')" -eq "$ups_after_first"
+check "still runs the previous image" test "$(running)" = sha256:old
+echo "sha256:fixed" > "$FAKE_DIR/registry_image"
+run
+check "a newer image is deployed after the failure" test "$RC" -eq 0
+check "and is running" test "$(running)" = sha256:fixed
+check "the earlier failure is forgotten after a good deploy" test ! -e "$STATE_DIR/failed-image"
 
 new_case "bad update whose rollback also fails"
 set_running sha256:old; set_health sha256:new unhealthy; set_health sha256:old unhealthy; run
