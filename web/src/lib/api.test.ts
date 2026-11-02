@@ -93,7 +93,7 @@ describe('query string building', () => {
   })
 
   it('skips undefined, null and empty values but keeps zero and false', async () => {
-    await api.threads({ sort: 'new', category: '', tag: undefined, author: null, page: 0, limit: 20 })
+    await api.threads({ sort: 'new', category: '', tag: undefined, nothing: null, page: 0, limit: 20 })
     expect(lastCall().url).toBe('/api/threads?sort=new&page=0&limit=20')
   })
 
