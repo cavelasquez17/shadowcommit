@@ -14,6 +14,7 @@ import (
 	"github.com/cavelasquez17/shadowcommit/api/internal/config"
 	"github.com/cavelasquez17/shadowcommit/api/internal/handlers"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
+	"github.com/cavelasquez17/shadowcommit/api/internal/testutil"
 )
 
 // newTestServer boots a full API — real in-memory sqlite, real router, real middleware —
@@ -22,7 +23,7 @@ func newTestServer(t *testing.T, mutate func(*config.Config)) (*httptest.Server,
 	t.Helper()
 	cfg := &config.Config{
 		DBDriver:        "sqlite",
-		DSN:             "file:" + t.Name() + "?mode=memory&cache=shared",
+		DSN:             testutil.MemoryDSN(t),
 		JWTSecret:       "test-secret",
 		AppBaseURL:      "http://localhost:8080",
 		WebBaseURL:      "http://localhost:5173",
