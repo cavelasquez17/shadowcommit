@@ -126,6 +126,63 @@ Neo-brutalist. The CSS in `src/index.css` is the source of truth.
 - **Animations**: `.glitch` (text-shadow RGB split), `.flicker` (opacity), `.marquee-track` (ticker scroll)
 - **No rounded corners, no gradients on structure.** Color does the shouting.
 
+## Safe-change workflow
+
+Read this before modifying anything. The goal is that no change lands without being understood, tested and reviewed.
+
+### Protected files
+
+These need extra care. Change them only in a dedicated, single-purpose PR, say in the PR why, and run the extra checks listed.
+
+| Path | Why it is protected | Extra check |
+|------|---------------------|-------------|
+| `LICENSE` | Legal terms of the project | Never edit unless the owner asks |
+| `.github/workflows/**` | Runs with repository permissions | Least-privilege `permissions`, pinned action versions, a dedicated `ci:` PR |
+| `Dockerfile`, `.dockerignore`, `scripts/smoke-container.sh` | Production image and secret hygiene | Build **both** architectures, run the smoke test, list the build context to confirm no `.env*`/`*.db` enters it |
+| `api/internal/auth/**` | Sessions and OAuth | Escalate (see *When uncertain*) |
+| `api/internal/config/config.go` | Production start-up validation (JWT secret, dev login) | Add or keep a test for every guard |
+| `api/internal/models/models.go` | Database schema | Escalate; propose the model diff first |
+| `.env`, `*.db`, any credential | Secrets and local data | Never read into output, never commit, never edit. `.env.example` holds placeholders only |
+| `AGENT.md`, `SPEC.md`, `.github/pull_request_template.md` | Project rules and plan | Only when asked, in their own PR |
+| Published history on `main` | Contributors and reviewers rely on it | No force-push, no squash, no rewriting pushed commits |
+
+### Before you modify a file
+
+1. `git status` is clean and you are on a topic branch cut from a fresh `main`.
+2. Read the file, its neighbours and its tests. Look for an existing helper before writing a new one.
+3. Check the table above. If the file is protected, state the plan and the reason first.
+4. Run the relevant tests to know the baseline before you change anything.
+5. If behaviour changes, write the failing test first.
+6. Make the smallest change that works, one concern per commit.
+7. Do not run destructive commands (`rm`, `git reset --hard`, history rewrites) on anything you have not read. Rewrite history only for commits that have not been pushed.
+
+### Development loop
+
+1. **Branch** from `main` (see *Git*).
+2. **Test first**, then implement. Commit every step separately.
+3. **`/simplify`** — review the branch diff for reuse, simplification, efficiency and altitude, and apply the fixes, **each as its own commit**.
+4. **`/code-review medium`** — verify every finding against the code before acting. Fix the real ones as their own commits; note the ones you skip and why. A finding that turns out to be a false positive is not a reason to change code.
+5. **Re-run all checks**: `go vet`, `go test -race`, `npm run lint`, `npm test`, `npm run build`, plus the Docker build and smoke test if the image or its inputs changed.
+6. **Open the PR** with `.github/pull_request_template.md`: summary with `Closes #N`, changes, tests, how it was verified, a *Review process* section (applied vs. considered and not changed), notes.
+7. **Wait for CI**: every job must exist and pass. "No checks reported" is not a pass.
+8. **Merge only when the owner asks for it**, with a merge commit (no squash), then delete the branch.
+
+## Testing
+
+- Every behaviour change ships with a test that fails without it. Bug fixes include a regression test.
+- **Mutation spot-checks**: break the behaviour on purpose (remove a permission check, an ordering, an escape) and confirm the suite fails. The mutant must compile — a build error is not a kill. If a mutant survives, strengthen the test.
+- Go handlers: use `newTestServer` (a real router over its own in-memory SQLite) and drive it over HTTP. Run with `-race`.
+- Web: mock `@/store/app` with `vi.mock`, build data with `src/test/factories.ts`, and query by role and accessible name rather than by CSS.
+- Locale files are guarded by a key-and-placeholder parity test. Adding a UI string means adding it to all three files.
+- Coverage targets: `internal/handlers` at 60% or more. Do not chase the number with assertions that cannot fail.
+
+## Deployment
+
+- The image is built in CI; the host is a small ARM64 VM with limited CPU, so it never compiles anything.
+- The host **pulls** new images (it is not reachable from CI runners), then checks the container health and rolls back on failure. Details are tracked in the deployment issues; host addresses, users and firewall rules are **not** documented in this repository.
+- Production requires: a real `JWT_SECRET`, a GitHub OAuth app, `DEV_LOGIN` off, `WEB_BASE_URL`/`APP_BASE_URL`/`CORS_ORIGINS` set to the public origin, and `/data` on a named volume (a bind mount needs `chown 65532`).
+- `/healthz` reports the stamped build version; use it to confirm what is running.
+
 ## Quality bar per deliverable
 
 **New endpoint** — done when ALL of:
