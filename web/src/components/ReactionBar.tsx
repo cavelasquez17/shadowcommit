@@ -55,6 +55,9 @@ export function ReactionBar({
             key={r.kind}
             type="button"
             disabled={!user}
+            // Without these the tally and the toggled state only exist as colours/emoji.
+            aria-label={`${r.label}: ${r.count}`}
+            aria-pressed={user ? r.mine : undefined}
             onClick={() => void handle(r.kind)}
             title={
               user
