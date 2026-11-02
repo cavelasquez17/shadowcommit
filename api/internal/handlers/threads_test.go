@@ -183,7 +183,7 @@ func TestListCategoriesRespectsSortOrder(t *testing.T) {
 			Slug string `json:"slug"`
 		} `json:"items"`
 	}](t, mustGet(t, ts.URL+"/api/categories"))
-	var order []string
+	order := make([]string, 0, len(out.Items))
 	for _, i := range out.Items {
 		order = append(order, i.Slug)
 	}
@@ -219,7 +219,7 @@ func TestListThreadsFiltersAndSorts(t *testing.T) {
 
 	ids := func(q string) []string {
 		l := decodeJSON[searchResult](t, mustGet(t, ts.URL+"/api/threads"+q))
-		var out []string
+		out := make([]string, 0, len(l.Items))
 		for _, i := range l.Items {
 			out = append(out, i.ID)
 		}

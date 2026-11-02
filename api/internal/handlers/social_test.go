@@ -114,7 +114,7 @@ func TestInviteCodesAreCaseInsensitiveOnCheckAndCapAtTen(t *testing.T) {
 	owner := devLoginAs(t, ts, "inviter_cap")
 
 	var first string
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		code := decodeJSON[inviteResp](t, postJSON(t, owner, ts.URL+"/api/invites", nil)).Invite.Code
 		if i == 0 {
 			first = code
@@ -177,7 +177,7 @@ func TestSearchUsersAutocomplete(t *testing.T) {
 				Username string `json:"username"`
 			} `json:"items"`
 		}](t, mustGet(t, ts.URL+"/api/users/search?q="+q))
-		var r []string
+		r := make([]string, 0, len(out.Items))
 		for _, i := range out.Items {
 			r = append(r, i.Username)
 		}

@@ -145,7 +145,7 @@ func TestGetJobCountsViewsAndHandlesUnknown(t *testing.T) {
 	c := devLoginAs(t, ts, "job_viewer")
 	j := newJob(t, ts.URL, c, "Viewed Co", nil)
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		mustGet(t, ts.URL+"/api/jobs/"+j.ID).Body.Close()
 	}
 	resp := mustGet(t, ts.URL+"/api/jobs/"+j.ID)
