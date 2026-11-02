@@ -203,8 +203,8 @@ These need extra care. Change them only in a dedicated, single-purpose PR, say i
 
 **Bug fix** — done when ALL of:
 - [ ] Root cause in commit body
-- [ ] A test that fails without the fix and passes with it (store layer) or before/after proof (UI)
-- [ ] No unrelated refactors in the same commit
+- [ ] A test that fails without the fix and passes with it, at the layer where the bug lives
+- [ ] The fix is its own commit, with no unrelated refactors
 
 ## When uncertain — escalation rules
 
@@ -218,6 +218,8 @@ Proceed without asking when: the change is additive, follows existing precedent,
 5. **Deleting or bulk-updating data**, `Unscoped()` deletes, destructive migrations.
 6. **Changing the tone** — if a new feature would shift the site's voice from satirical to earnest (or vice versa), flag it.
 7. **Monetization features** — anything touching payments, subscriptions, or sponsorships.
+8. **Deployment targets** — anything that touches a server, its network or firewall rules, or credentials. Never change those yourself; give the owner the exact steps.
+9. **Features that collect photos, voice or other personal/biometric data** (mood selfies, voice comments) — a privacy review comes first (see the tracking issues).
 
 ## Git
 
