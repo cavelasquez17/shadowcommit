@@ -57,7 +57,7 @@ func serveStaticFile(c *gin.Context, fsys fs.FS, name string) bool {
 	if err != nil {
 		return false
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }() // read-only file: nothing useful to do with a close error
 	info, err := f.Stat()
 	if err != nil || !info.Mode().IsRegular() {
 		return false

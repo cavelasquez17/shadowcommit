@@ -1,0 +1,50 @@
+version: "2"
+linters:
+  # see also https://golangci-lint.run/usage/linters/#enabled-by-default
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - durationcheck
+    - errname
+    - exhaustive
+    - fatcontext
+    - gocheckcompilerdirectives
+    - goconst
+    - goprintffuncname
+    - iface
+    - intrange
+    - mirror
+    - musttag
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - noctx
+    - nolintlint
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - reassign
+    - recvcheck
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+  settings:
+    errcheck:
+      exclude-functions:
+        - "(io.Closer).Close"
+      verbose: true
+    exhaustive:
+      check:
+        - switch
+        - map
+    goconst:
+      min-occurrences: 100
+formatters:
+  enable:
+    - gofmt
+    - goimports
