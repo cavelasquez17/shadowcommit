@@ -40,7 +40,6 @@ func TestDevLoginCreatesNewUserAndNeverLeaksToken(t *testing.T) {
 	ts, _ := newTestServer(t, nil)
 
 	resp := postJSON(t, jsonClient(t), ts.URL+"/api/auth/dev-login", map[string]string{"username": "freshdev"})
-	defer resp.Body.Close() // decodeJSON closes it too; this makes the ownership explicit
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("want 200, got %d", resp.StatusCode)
 	}
