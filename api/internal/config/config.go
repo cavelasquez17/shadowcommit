@@ -28,6 +28,9 @@ type Config struct {
 	// StaticDir, when set, is a directory of built web assets the API serves itself, so a
 	// single origin can host both the SPA and /api. Empty means API-only.
 	StaticDir string
+	// Version identifies the build (the commit SHA in release images). It is stamped in at
+	// link time by main and shown on /healthz so a deploy can be verified from outside.
+	Version string
 }
 
 func env(key, fallback string) string {
