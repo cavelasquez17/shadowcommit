@@ -1,5 +1,6 @@
 // Command api serves the ShadowCommit HTTP API.
 package main
+
 import (
 	"context"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"github.com/cavelasquez17/shadowcommit/api/internal/auth"
 	"github.com/cavelasquez17/shadowcommit/api/internal/config"
 	"github.com/cavelasquez17/shadowcommit/api/internal/handlers"
+	"github.com/cavelasquez17/shadowcommit/api/internal/jobs"
 	"github.com/cavelasquez17/shadowcommit/api/internal/seed"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 )
@@ -49,6 +51,26 @@ func main() {
 	}
 
 	h := handlers.New(db, cfg, iss, gh)
+
+	// Recurring work (server local time). Set JOBS_ENABLED=false on all but one replica.
+	var sched *jobs.Scheduler
+	if os.Getenv("JOBS_ENABLED") != "false" {
+		sched = jobs.New(nil,
+			jobs.Job{Name: "refresh-hot-scores", Schedule: jobs.Daily(3),
+				Run: func(ctx context.Context, now time.Time) error {
+					n, err := jobs.RefreshHotScores(ctx, db, now)
+					log.Printf("refresh-hot-scores: %d threads", n)
+					return err
+				}},
+			jobs.Job{Name: "weekly-digest", Schedule: jobs.Weekly(time.Monday, 9),
+				Run: func(ctx context.Context, now time.Time) error {
+					n, err := jobs.SendWeeklyDigest(ctx, db, now)
+					log.Printf("weekly-digest: %d notifications", n)
+					return err
+				}},
+		)
+		sched.Start()
+	}
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           h.Router(),
@@ -70,6 +92,9 @@ func main() {
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("shutdown: %v", err)
+	}
+	if sched != nil {
+		sched.Stop()
 	}
 	h.Close()
 	log.Println("api stopped. no severance was paid.")
