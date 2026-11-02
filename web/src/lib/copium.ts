@@ -158,10 +158,13 @@ export function applyCopium(text: string): string {
  * corporate-positive ones. Same kinds, different vibes.
  */
 export const COPIUM_REACTIONS: Record<string, { emoji: string; label: string }> = {
-  respects: { emoji: '🙌', label: 'Celebrate' },
-  saluting: { emoji: '💡', label: 'Great insight' },
-  scales: { emoji: '🚀', label: 'Going places' },
-  skull: { emoji: '✨', label: 'Sparkling' },
-  fire: { emoji: '🔥', label: 'On fire' },
-  clown: { emoji: '🤝', label: 'Partner' },
+  // Keys are the reaction kinds the API sends (see reactionOptions in the Go handlers).
+  // Each keeps the corporate-positive emoji it had under its old name; `robot` is left out
+  // on purpose and falls back to its own emoji.
+  relate: { emoji: '🙌', label: 'Celebrate' }, // was "respects"
+  copium: { emoji: '💡', label: 'Great insight' }, // was "saluting"
+  lawyer: { emoji: '🚀', label: 'Going places' }, // was "scales"
+  f: { emoji: '✨', label: 'Sparkling' }, // was "skull"
+  brutal: { emoji: '🔥', label: 'On fire' }, // was "fire"
+  laugh: { emoji: '🤝', label: 'Partner' }, // was "clown"
 }

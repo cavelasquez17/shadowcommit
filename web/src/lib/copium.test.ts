@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import { applyCopium } from './copium'
+import { applyCopium, COPIUM_REACTIONS } from './copium'
+
+// Mirrors reactionOptions in api/internal/handlers/vocab.go. If the API gains or renames a
+// reaction, update this list and the copium table together.
+const API_REACTION_KINDS = ['f', 'relate', 'laugh', 'robot', 'copium', 'brutal', 'lawyer']
+
+describe('COPIUM_REACTIONS', () => {
+  it('actually overrides reactions the API sends (otherwise copium mode does nothing here)', () => {
+    expect(Object.keys(COPIUM_REACTIONS).length).toBeGreaterThan(0)
+    expect(Object.keys(COPIUM_REACTIONS).every((k) => API_REACTION_KINDS.includes(k))).toBe(true)
+  })
+
+  it('only overrides reaction kinds the API actually sends', () => {
+    const unknown = Object.keys(COPIUM_REACTIONS).filter((k) => !API_REACTION_KINDS.includes(k))
+    expect(unknown).toEqual([])
+  })
+
+  it('gives each override an emoji and a label', () => {
+    for (const [kind, v] of Object.entries(COPIUM_REACTIONS)) {
+      expect(v.emoji, kind).not.toBe('')
+      expect(v.label, kind).not.toBe('')
+    }
+  })
+})
 
 describe('applyCopium', () => {
   it('rewrites English layoff language into corporate euphemisms', () => {
