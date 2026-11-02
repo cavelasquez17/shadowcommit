@@ -25,6 +25,9 @@ type Config struct {
 	DevLoginEnabled bool
 	// InviteOnly gates registration behind an invite code.
 	InviteOnly bool
+	// StaticDir, when set, is a directory of built web assets the API serves itself, so a
+	// single origin can host both the SPA and /api. Empty means API-only.
+	StaticDir string
 }
 
 func env(key, fallback string) string {
@@ -65,6 +68,7 @@ func Load() *Config {
 	// dev-login wide open by default (see AGENT.md security notes).
 	c.DevLoginEnabled = envBool("DEV_LOGIN", false)
 	c.InviteOnly = envBool("INVITE_ONLY", false)
+	c.StaticDir = env("STATIC_DIR", "")
 
 	if c.Env == "production" {
 		if c.JWTSecret == "dev-secret-rotate-me-or-get-fired" {
