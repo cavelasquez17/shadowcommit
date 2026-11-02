@@ -1,3 +1,4 @@
+# Mirrors the lint setup used in our other Go services so the rules feel the same everywhere.
 version: "2"
 linters:
   # see also https://golangci-lint.run/usage/linters/#enabled-by-default
@@ -33,6 +34,13 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
+  exclusions:
+    rules:
+      # Test helpers (decodeJSON, postJSON, mustGet) own and close response bodies, but
+      # bodyclose cannot see through them and reports every call. It stays on for real code.
+      - path: _test\.go
+        linters:
+          - bodyclose
   settings:
     errcheck:
       exclude-functions:
