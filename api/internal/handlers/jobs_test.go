@@ -53,7 +53,7 @@ func listJobs(t *testing.T, tsURL, query string) jobList {
 
 func TestCreateJobNormalizesFieldsAndAppliesDefaults(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_poster")
 
 	j := newJob(t, ts.URL, c, "Acme", map[string]any{"country_code": "co", "currency": "cop"})
@@ -69,7 +69,7 @@ func TestCreateJobNormalizesFieldsAndAppliesDefaults(t *testing.T) {
 
 func TestCreateJobValidation(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_validator")
 
 	cases := []struct {
@@ -105,7 +105,7 @@ func TestCreateJobValidation(t *testing.T) {
 
 func TestListJobsIsPublicSortsSponsoredFirstAndFilters(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_lister")
 	// The sponsored job is created FIRST (oldest), so only the sponsorship ordering can
 	// put it on top; plain recency would leave it last.
@@ -141,7 +141,7 @@ func TestListJobsIsPublicSortsSponsoredFirstAndFilters(t *testing.T) {
 
 func TestGetJobCountsViewsAndHandlesUnknown(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_viewer")
 	j := newJob(t, ts.URL, c, "Viewed Co", nil)
 
@@ -166,7 +166,7 @@ func TestGetJobCountsViewsAndHandlesUnknown(t *testing.T) {
 
 func TestSponsorIsAdminOnlyAndToggles(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "spons_owner")
 	j := newJob(t, ts.URL, owner, "Sponsor Me Co", nil)
 
@@ -179,7 +179,7 @@ func TestSponsorIsAdminOnlyAndToggles(t *testing.T) {
 
 func TestSponsorByAdmin(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "spons2_owner")
 	admin := devLoginAs(t, ts, "spons2_admin")
 	makeAdmin(t, db, "spons2_admin")
@@ -204,7 +204,7 @@ func TestSponsorByAdmin(t *testing.T) {
 
 func TestMarkFilledPermissionsAndVisibility(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "fill_owner")
 	other := devLoginAs(t, ts, "fill_other")
 	admin := devLoginAs(t, ts, "fill_admin")
@@ -238,7 +238,7 @@ func TestMarkFilledPermissionsAndVisibility(t *testing.T) {
 
 func TestDeleteJobPermissions(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "jdel_owner")
 	other := devLoginAs(t, ts, "jdel_other")
 	j := newJob(t, ts.URL, owner, "Delete Me Co", nil)
@@ -265,7 +265,7 @@ func TestDeleteJobPermissions(t *testing.T) {
 
 func TestJobStatsCountsOpenAndSponsored(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "stats_poster")
 	newJob(t, ts.URL, c, "One Co", map[string]any{"seniority": "senior"})
 	s := newJob(t, ts.URL, c, "Two Co", map[string]any{"seniority": "senior"})

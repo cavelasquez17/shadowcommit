@@ -12,7 +12,7 @@ import (
 // same write as the soft delete.
 func TestDeleteThreadDecrementsCounters(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "threadauthor")
 
 	cat := models.Category{Slug: "layoffs", Name: "Layoffs"}
@@ -68,7 +68,7 @@ func TestDeleteThreadDecrementsCounters(t *testing.T) {
 // and author.post_count must both come back down after a delete.
 func TestDeletePostDecrementsCounters(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "postauthor")
 
 	cat := models.Category{Slug: "restructuring", Name: "Restructuring"}

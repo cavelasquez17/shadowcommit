@@ -7,7 +7,7 @@ import (
 )
 
 func TestCreateThreadErrorNamesTheMissingField(t *testing.T) {
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "validation_tester")
 
 	cases := []struct {

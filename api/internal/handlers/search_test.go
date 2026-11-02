@@ -42,7 +42,7 @@ func search(t *testing.T, tsURL, q string) searchResult {
 }
 
 func TestThreadSearch(t *testing.T) {
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	if err := db.Create(&models.Category{Slug: "the-incident", Name: "The Incident"}).Error; err != nil {
 		t.Fatal(err)
 	}

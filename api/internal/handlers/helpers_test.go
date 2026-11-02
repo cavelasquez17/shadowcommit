@@ -18,7 +18,7 @@ import (
 
 // newTestServer boots a full API — real in-memory sqlite, real router, real middleware —
 // behind an httptest.Server so tests drive it exactly like a browser or the SPA would.
-func newTestServer(t *testing.T, mutate func(*config.Config)) (*httptest.Server, *gorm.DB, *config.Config) {
+func newTestServer(t *testing.T, mutate func(*config.Config)) (*httptest.Server, *gorm.DB) {
 	t.Helper()
 	cfg := &config.Config{
 		DBDriver:        "sqlite",
@@ -41,7 +41,7 @@ func newTestServer(t *testing.T, mutate func(*config.Config)) (*httptest.Server,
 	t.Cleanup(api.Close)
 	ts := httptest.NewServer(api.Router())
 	t.Cleanup(ts.Close)
-	return ts, db, cfg
+	return ts, db
 }
 
 func jsonClient(t *testing.T) *http.Client {

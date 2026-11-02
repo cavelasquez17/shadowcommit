@@ -9,7 +9,7 @@ import (
 // must be http(s), never javascript:.
 func TestUpdateProfileRejectsJavascriptURL(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "linkspammer")
 
 	resp := patchJSON(t, client, ts.URL+"/api/profile", map[string]string{
@@ -24,7 +24,7 @@ func TestUpdateProfileRejectsJavascriptURL(t *testing.T) {
 // TestUpdateProfileAcceptsHTTPSURL guards the fix didn't break legitimate links.
 func TestUpdateProfileAcceptsHTTPSURL(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "linkeduser")
 
 	resp := patchJSON(t, client, ts.URL+"/api/profile", map[string]string{
@@ -39,7 +39,7 @@ func TestUpdateProfileAcceptsHTTPSURL(t *testing.T) {
 // TestAddRepoRejectsNonHTTPURL guards repo links the same way.
 func TestAddRepoRejectsNonHTTPURL(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "repospammer")
 
 	resp := postJSON(t, client, ts.URL+"/api/profile/repos", map[string]string{
@@ -55,7 +55,7 @@ func TestAddRepoRejectsNonHTTPURL(t *testing.T) {
 // public and reachable without an account.
 func TestCreateJobRejectsNonHTTPURL(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "jobspammer")
 
 	resp := postJSON(t, client, ts.URL+"/api/jobs", map[string]any{

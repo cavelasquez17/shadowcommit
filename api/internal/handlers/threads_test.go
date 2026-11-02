@@ -52,7 +52,7 @@ func editBody(title string, extra map[string]any) map[string]any {
 
 func TestGetThreadReturnsPostsInOrderAndCountsViews(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "get_author")
 	id := newThread(t, ts.URL, author, "A thread that gets read", "Body long enough to be a valid thread.")
@@ -86,7 +86,7 @@ func TestGetThreadReturnsPostsInOrderAndCountsViews(t *testing.T) {
 
 func TestUpdateThread(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	owner := devLoginAs(t, ts, "upd_owner")
 	other := devLoginAs(t, ts, "upd_other")
@@ -129,7 +129,7 @@ func TestUpdateThread(t *testing.T) {
 
 func TestThreadTagsAreDeduplicatedCappedAndCounted(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "tagger")
 
@@ -173,7 +173,7 @@ func TestThreadTagsAreDeduplicatedCappedAndCounted(t *testing.T) {
 
 func TestListCategoriesRespectsSortOrder(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	db.Create(&models.Category{Slug: "zeta", Name: "Zeta", SortOrder: 1})
 	db.Create(&models.Category{Slug: "alpha", Name: "Alpha", SortOrder: 2})
 	db.Create(&models.Category{Slug: "beta", Name: "Beta", SortOrder: 2})
@@ -195,7 +195,7 @@ func TestListCategoriesRespectsSortOrder(t *testing.T) {
 
 func TestListThreadsFiltersAndSorts(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	db.Create(&models.Category{Slug: "layoffs", Name: "Layoffs"})
 	alice := devLoginAs(t, ts, "filter_alice")
