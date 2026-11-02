@@ -104,8 +104,10 @@ const COPIUM_MAP: [RegExp, string][] = [
   [/\bconfesión\b/gi, 'testimonio inspirador'],
   [/\bincidente\b/gi, 'poderoso momento de aprendizaje'],
   [/\bhachazo\b/gi, 'optimización organizacional estratégica'],
-  [/\bmurió\b/gi, 'pivotó hacia nuevos horizontes'],
-  [/\bmató\b/gi, 'disrumpió creativamente'],
+  // \b only knows ASCII letters, so it never matches right after an accented vowel; use a
+  // Unicode-aware lookahead for words that end in one.
+  [/\bmurió(?!\p{L})/giu, 'pivotó hacia nuevos horizontes'],
+  [/\bmató(?!\p{L})/giu, 'disrumpió creativamente'],
   [/\bmuerto\b/gi, 'pivotado hacia nuevas oportunidades'],
   [/\bquejas\b/gi, 'testimonios constructivos'],
   [/\bqueja\b/gi, 'testimonio constructivo'],
@@ -156,10 +158,13 @@ export function applyCopium(text: string): string {
  * corporate-positive ones. Same kinds, different vibes.
  */
 export const COPIUM_REACTIONS: Record<string, { emoji: string; label: string }> = {
-  respects: { emoji: '🙌', label: 'Celebrate' },
-  saluting: { emoji: '💡', label: 'Great insight' },
-  scales: { emoji: '🚀', label: 'Going places' },
-  skull: { emoji: '✨', label: 'Sparkling' },
-  fire: { emoji: '🔥', label: 'On fire' },
-  clown: { emoji: '🤝', label: 'Partner' },
+  // Keys are the reaction kinds the API sends (see reactionOptions in the Go handlers).
+  // Each keeps the corporate-positive emoji it had under its old name; `robot` is left out
+  // on purpose and falls back to its own emoji.
+  relate: { emoji: '🙌', label: 'Celebrate' }, // was "respects"
+  copium: { emoji: '💡', label: 'Great insight' }, // was "saluting"
+  lawyer: { emoji: '🚀', label: 'Going places' }, // was "scales"
+  f: { emoji: '✨', label: 'Sparkling' }, // was "skull"
+  brutal: { emoji: '🔥', label: 'On fire' }, // was "fire"
+  laugh: { emoji: '🤝', label: 'Partner' }, // was "clown"
 }
