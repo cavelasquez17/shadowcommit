@@ -174,6 +174,12 @@ describe('renderMarkdown: safety (the output goes into dangerouslySetInnerHTML)'
     expect(renderMarkdown('`<i>x</i>`')).toContain('<code>&lt;i&gt;x&lt;/i&gt;</code>')
   })
 
+  it('does not let user text forge the internal fence marker', () => {
+    const html = renderMarkdown('\u0000FENCE0\u0000 and \u0000FENCE7\u0000')
+    expect(html).not.toContain('undefined')
+    expect(html).not.toContain('\u0000')
+  })
+
   it('handles empty input', () => {
     expect(renderMarkdown('')).toBe('')
   })

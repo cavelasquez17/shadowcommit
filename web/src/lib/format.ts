@@ -73,6 +73,10 @@ function escapeHTML(s: string): string {
  */
 export function renderMarkdown(src: string): string {
   const fences: string[] = []
+  // \u0000 is reserved as the fence placeholder below; drop any the user typed so they
+  // cannot forge a placeholder that points at a fence that does not exist.
+  // eslint-disable-next-line no-control-regex
+  src = src.replace(/\u0000/g, '')
   // Pull fenced blocks out first so their contents are never touched by inline rules.
   let text = escapeHTML(src).replace(/```(\w*)\n?([\s\S]*?)```/g, (_m, _lang, code) => {
     fences.push(`<pre><code>${code.replace(/\n$/, '')}</code></pre>`)
