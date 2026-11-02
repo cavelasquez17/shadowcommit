@@ -58,14 +58,14 @@ revision=$("$DOCKER" image inspect --format '{{index .Config.Labels "org.opencon
 short="${revision:0:7}"
 log "updating ${old_id:-<none>} -> $new_id (${short:-unknown revision})"
 if [ -n "$old_id" ]; then "$DOCKER" tag "$old_id" "$PREVIOUS_TAG"; fi
-compose up -d || log "compose up failed"
-
-if wait_healthy; then
+# The old container can still be healthy when "up" fails, so health alone proves nothing:
+# the update only counts as deployed if "up" succeeded AND the app then turns healthy.
+if compose up -d && wait_healthy; then
   notify "deployed ${short:-new image}"
   exit 0
 fi
 
-notify "new image ${short:-?} did not become healthy within ${HEALTH_TIMEOUT}s"
+notify "new image ${short:-?} did not start healthy (waited up to ${HEALTH_TIMEOUT}s)"
 if [ -z "$old_id" ]; then
   notify "first deployment failed and there is no previous image to roll back to"
   exit 2

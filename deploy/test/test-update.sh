@@ -106,7 +106,7 @@ check "left the app alone" test "$(running)" = sha256:old
 
 new_case "a failed deploy is reported to the notify command"
 set_running sha256:old; set_health sha256:new unhealthy; make_notifier 0; run
-check "reported the failure" notes_have 'did not become healthy'
+check "reported the failure" notes_have 'did not start healthy'
 check "reported the rollback" notes_have 'rolled back'
 
 new_case "a successful deploy is announced with its revision"
