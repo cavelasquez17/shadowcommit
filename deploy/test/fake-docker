@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# A tiny stand-in for the docker CLI, driven by files in $FAKE_DIR, so deploy/update.sh can be
+# tested without Docker or a registry.
+#   registry_image   image id the registry currently serves (what `pull` fetches)
+#   pulled_image     image id present locally after a pull
+#   running_image    image id the app container runs (absent = no container)
+#   health_<id>      health status of a container running that image (default: healthy)
+#   revision         value of the org.opencontainers.image.revision label
+set -euo pipefail
+echo "$*" >> "$FAKE_DIR/calls"
+read_file() { [ -f "$FAKE_DIR/$1" ] && cat "$FAKE_DIR/$1"; }
+
+case "$1" in
+  inspect)
+    case "$3" in
+      '{{.Image}}') read_file running_image || exit 1 ;;
+      '{{.State.Health.Status}}')
+        id=$(read_file running_image) || { echo missing; exit 1; }
+        read_file "health_$id" || echo healthy ;;
+      *) exit 1 ;;
+    esac ;;
+  image)
+    case "$4" in
+      '{{.Id}}') read_file pulled_image ;;
+      *revision*) read_file revision || true ;;
+      *) exit 1 ;;
+    esac ;;
+  compose)
+    shift
+    case "$1" in
+      pull) cp "$FAKE_DIR/registry_image" "$FAKE_DIR/pulled_image" ;;
+      up)
+        # A pinned image (used for rollback) wins over whatever was last pulled.
+        if [ -n "${SHADOWCOMMIT_IMAGE:-}" ]; then echo "$SHADOWCOMMIT_IMAGE" > "$FAKE_DIR/running_image"
+        else cp "$FAKE_DIR/pulled_image" "$FAKE_DIR/running_image"; fi ;;
+      *) exit 1 ;;
+    esac ;;
+  *) exit 1 ;;
+esac
