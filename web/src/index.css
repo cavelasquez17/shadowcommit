@@ -1,0 +1,241 @@
+@import 'tailwindcss';
+
+/* ShadowCommit design language: neo-brutalist, loud, unapologetically multicolour.
+   Hard borders, offset shadows, zero gradients on structure. The colours do the shouting. */
+
+@theme {
+  --color-void: #0a0a0f;
+  --color-ink: #12121a;
+  --color-slab: #1a1a26;
+  --color-edge: #2e2e42;
+  --color-edge-light: #3f3f5a;
+  --color-muted: #8b8ba7;
+
+  --color-toxic: #ccff00;
+  --color-blood: #ff3355;
+  --color-cyber: #00e5ff;
+  --color-slime: #39ff88;
+  --color-grape: #a855f7;
+  --color-tangerine: #ff8a1f;
+  --color-bubble: #ff5ecf;
+  --color-butter: #ffe14d;
+
+  --font-display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-edge);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-void);
+    color: #ececf5;
+    font-family: var(--font-mono);
+    /* Faint grid so the page reads as a terminal, not a document. */
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  ::selection {
+    background: var(--color-toxic);
+    color: #000;
+  }
+
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-void);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-edge);
+    border: 2px solid var(--color-void);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-grape);
+  }
+}
+
+@layer components {
+  /* The single most important primitive: a hard-edged panel with an offset shadow. */
+  .slab {
+    @apply border-2 bg-[var(--color-ink)];
+    box-shadow: 4px 4px 0 0 rgb(0 0 0 / 0.75);
+  }
+
+  .slab-hover {
+    transition:
+      transform 90ms ease-out,
+      box-shadow 90ms ease-out;
+  }
+  .slab-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0 0 rgb(0 0 0 / 0.85);
+  }
+
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 border-2 px-4 py-2
+      text-xs font-bold tracking-widest uppercase select-none;
+    box-shadow: 3px 3px 0 0 rgb(0 0 0 / 0.8);
+    transition:
+      transform 70ms ease-out,
+      box-shadow 70ms ease-out,
+      filter 70ms ease-out;
+  }
+  .btn:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 rgb(0 0 0 / 0.9);
+    filter: brightness(1.08);
+  }
+  .btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 rgb(0 0 0 / 0.9);
+  }
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  .btn-primary {
+    @apply border-black bg-[var(--color-toxic)] text-black;
+  }
+  .btn-danger {
+    @apply border-black bg-[var(--color-blood)] text-white;
+  }
+  .btn-ghost {
+    @apply border-[var(--color-edge)] bg-[var(--color-slab)] text-zinc-200;
+  }
+
+  .field {
+    @apply w-full border-2 border-[var(--color-edge)] bg-[var(--color-void)] px-3 py-2
+      text-sm text-zinc-100 outline-none placeholder:text-zinc-600;
+  }
+  .field:focus {
+    @apply border-[var(--color-cyber)];
+    box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--color-cyber) 35%, transparent);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 border px-2 py-0.5 text-[10px] font-bold
+      tracking-wider whitespace-nowrap uppercase;
+  }
+
+  /* Section headings that look stamped rather than typeset. */
+  .stamp {
+    @apply inline-block border-2 border-black px-3 py-1 text-xs font-black tracking-[0.2em] uppercase;
+    box-shadow: 3px 3px 0 0 rgb(0 0 0 / 0.8);
+  }
+
+  .prose-sc {
+    @apply text-[13.5px] leading-relaxed text-zinc-300;
+  }
+  .prose-sc p {
+    @apply mb-3;
+  }
+  .prose-sc strong {
+    @apply font-bold text-[var(--color-butter)];
+  }
+  .prose-sc em {
+    @apply text-[var(--color-bubble)] italic;
+  }
+  .prose-sc blockquote {
+    @apply my-3 border-l-4 border-[var(--color-grape)] bg-[var(--color-slab)] py-2 pl-3 text-zinc-400 italic;
+  }
+  .prose-sc ol,
+  .prose-sc ul {
+    @apply mb-3 ml-5 space-y-1;
+  }
+  .prose-sc ol {
+    @apply list-decimal;
+  }
+  .prose-sc ul {
+    @apply list-disc;
+  }
+  .prose-sc code {
+    @apply border border-[var(--color-edge)] bg-black px-1 py-0.5 text-[12px] text-[var(--color-slime)];
+  }
+  .prose-sc pre {
+    @apply my-3 overflow-x-auto border-2 border-[var(--color-edge)] bg-black p-3 text-[12px] text-[var(--color-slime)];
+  }
+  .prose-sc pre code {
+    @apply border-0 bg-transparent p-0;
+  }
+  .prose-sc a {
+    @apply text-[var(--color-cyber)] underline decoration-dotted;
+  }
+  .prose-sc a.mention {
+    @apply border border-[var(--color-grape)] bg-[color-mix(in_srgb,var(--color-grape)_18%,transparent)]
+      px-1 font-bold text-[var(--color-grape)] no-underline;
+  }
+  .prose-sc h1,
+  .prose-sc h2,
+  .prose-sc h3 {
+    @apply mt-4 mb-2 font-black tracking-tight text-white uppercase;
+  }
+}
+
+@layer utilities {
+  .marquee-track {
+    animation: marquee 38s linear infinite;
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .glitch {
+    animation: glitch 6s steps(1) infinite;
+  }
+  @keyframes glitch {
+    0%,
+    92%,
+    100% {
+      text-shadow: none;
+    }
+    93% {
+      text-shadow:
+        -2px 0 var(--color-blood),
+        2px 0 var(--color-cyber);
+    }
+    95% {
+      text-shadow:
+        2px 0 var(--color-toxic),
+        -2px 0 var(--color-bubble);
+    }
+  }
+
+  .flicker {
+    animation: flicker 3.5s ease-in-out infinite;
+  }
+  @keyframes flicker {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    48% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+    52% {
+      opacity: 1;
+    }
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

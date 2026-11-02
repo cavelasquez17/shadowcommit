@@ -1,0 +1,25 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Build artifacts
+api/shadowcommit
+api/api
+web/dist/
+
+# Screenshots
+.screens/
+
+# OS / editor
+.DS_Store
+*.sw?
+.idea/
+.vscode/*
+!.vscode/extensions.json
