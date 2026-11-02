@@ -6,6 +6,10 @@
 #   running_image    image id the app container runs (absent = no container)
 #   health_<id>      health status of a container running that image (default: healthy)
 #   revision         value of the org.opencontainers.image.revision label
+#   tag_<name>       image id a local tag points at (created by `docker tag`)
+#   pruned_<id>      marks an image id that `docker image prune` has deleted
+# FAKE_UP_FAILS=1 makes an unpinned `compose up` fail without changing what runs.
+# FAKE_PRUNE_OLD=1 makes `compose pull` simulate the previous image becoming untagged and pruned.
 set -euo pipefail
 echo "$*" >> "$FAKE_DIR/calls"
 read_file() { [ -f "$FAKE_DIR/$1" ] && cat "$FAKE_DIR/$1"; }
@@ -25,14 +29,21 @@ case "$1" in
       *revision*) read_file revision || true ;;
       *) exit 1 ;;
     esac ;;
+  tag) echo "$2" > "$FAKE_DIR/tag_$3" ;;
   compose)
     shift
     case "$1" in
-      pull) cp "$FAKE_DIR/registry_image" "$FAKE_DIR/pulled_image" ;;
+      pull)
+        # The previous image loses its tag when :main moves; a prune may then delete it.
+        if [ -n "${FAKE_PRUNE_OLD:-}" ] && [ -f "$FAKE_DIR/running_image" ]; then touch "$FAKE_DIR/pruned_$(cat "$FAKE_DIR/running_image")"; fi
+        cp "$FAKE_DIR/registry_image" "$FAKE_DIR/pulled_image" ;;
       up)
-        # A pinned image (used for rollback) wins over whatever was last pulled.
-        if [ -n "${SHADOWCOMMIT_IMAGE:-}" ]; then echo "$SHADOWCOMMIT_IMAGE" > "$FAKE_DIR/running_image"
-        else cp "$FAKE_DIR/pulled_image" "$FAKE_DIR/running_image"; fi ;;
+        pin="${SHADOWCOMMIT_IMAGE:-}"
+        if [ -z "$pin" ] && [ -n "${FAKE_UP_FAILS:-}" ]; then echo "up failed" >&2; exit 1
+        elif [ -z "$pin" ]; then cp "$FAKE_DIR/pulled_image" "$FAKE_DIR/running_image"
+        elif [ -f "$FAKE_DIR/tag_$pin" ]; then cat "$FAKE_DIR/tag_$pin" > "$FAKE_DIR/running_image" # a tag keeps its image alive
+        elif [ -f "$FAKE_DIR/pruned_$pin" ]; then echo "image $pin was pruned" >&2; exit 1
+        else echo "$pin" > "$FAKE_DIR/running_image"; fi ;;
       *) exit 1 ;;
     esac ;;
   *) exit 1 ;;

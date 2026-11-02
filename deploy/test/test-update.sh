@@ -17,7 +17,7 @@ new_case() {
   FAKE_DIR=$(mktemp -d)
   export FAKE_DIR DOCKER="$HERE/fake-docker" DEPLOY_DIR="$FAKE_DIR" LOCK_FILE="$FAKE_DIR/lock"
   export HEALTH_TIMEOUT=2 HEALTH_INTERVAL=1
-  unset NOTIFY_CMD SHADOWCOMMIT_IMAGE
+  unset NOTIFY_CMD SHADOWCOMMIT_IMAGE FAKE_PRUNE_OLD FAKE_UP_FAILS
   echo "sha256:new" > "$FAKE_DIR/registry_image"
   echo "sha256:aaaaaaa0001" > "$FAKE_DIR/revision"
   echo "$CASE"
@@ -70,6 +70,20 @@ new_case "bad update is rolled back"
 set_running sha256:old; set_health sha256:new unhealthy; run
 check "exits 1" test "$RC" -eq 1
 check "restored the previous image" test "$(running)" = sha256:old
+check "reports the rollback" out_has 'rolled back'
+
+new_case "rollback still works when the previous image was pruned"
+export FAKE_PRUNE_OLD=1
+set_running sha256:old; set_health sha256:new unhealthy; run
+check "exits 1 (rolled back)" test "$RC" -eq 1
+check "restored the previous image" test "$(running)" = sha256:old
+check "kept it alive under a tag before updating" grep -q -- 'tag sha256:old' "$FAKE_DIR/calls"
+
+new_case "an update whose containers fail to start is rolled back too"
+export FAKE_UP_FAILS=1
+set_running sha256:old; run
+check "exits 1 (rolled back), not an abort" test "$RC" -eq 1
+check "still runs the previous image" test "$(running)" = sha256:old
 check "reports the rollback" out_has 'rolled back'
 
 new_case "bad update whose rollback also fails"

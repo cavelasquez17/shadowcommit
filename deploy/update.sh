@@ -15,6 +15,9 @@ IMAGE="${SHADOWCOMMIT_IMAGE:-ghcr.io/cavelasquez17/shadowcommit:main}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"   # seconds to wait for the new container to turn healthy
 HEALTH_INTERVAL="${HEALTH_INTERVAL:-3}"
 LOCK_FILE="${LOCK_FILE:-/tmp/shadowcommit-update.lock}"
+# Local tag that keeps the previous image alive: once :main moves, the old image has no tag and
+# `docker image prune` would delete it, taking the rollback target with it.
+PREVIOUS_TAG="${PREVIOUS_TAG:-shadowcommit:previous}"
 NOTIFY_CMD="${NOTIFY_CMD:-}"             # optional: called with one message argument
 
 log() { echo "$(date -u +%FT%TZ) $*"; }
@@ -54,7 +57,8 @@ fi
 revision=$("$DOCKER" image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE" 2>/dev/null || true)
 short="${revision:0:7}"
 log "updating ${old_id:-<none>} -> $new_id (${short:-unknown revision})"
-compose up -d
+if [ -n "$old_id" ]; then "$DOCKER" tag "$old_id" "$PREVIOUS_TAG"; fi
+compose up -d || log "compose up failed"
 
 if wait_healthy; then
   notify "deployed ${short:-new image}"
@@ -67,9 +71,8 @@ if [ -z "$old_id" ]; then
   exit 2
 fi
 
-log "rolling back to $old_id"
-SHADOWCOMMIT_IMAGE="$old_id" compose up -d app
-if wait_healthy; then
+log "rolling back to $old_id (tag $PREVIOUS_TAG)"
+if SHADOWCOMMIT_IMAGE="$PREVIOUS_TAG" compose up -d app && wait_healthy; then
   notify "rolled back to the previous image"
   exit 1
 fi
