@@ -8,6 +8,7 @@ import (
 )
 
 func TestRunHealthcheck(t *testing.T) {
+	t.Parallel()
 	ok := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }))
 	defer ok.Close()
 	if err := runHealthcheck(ok.URL, time.Second); err != nil {
@@ -24,6 +25,7 @@ func TestRunHealthcheck(t *testing.T) {
 }
 
 func TestRunHealthcheckFailsWhenNothingIsListening(t *testing.T) {
+	t.Parallel()
 	srv := httptest.NewServer(http.NotFoundHandler())
 	url := srv.URL
 	srv.Close() // the port is now closed
@@ -33,6 +35,7 @@ func TestRunHealthcheckFailsWhenNothingIsListening(t *testing.T) {
 }
 
 func TestRunHealthcheckFailsOnTimeout(t *testing.T) {
+	t.Parallel()
 	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(300 * time.Millisecond)
 	}))

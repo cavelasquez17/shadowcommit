@@ -111,6 +111,7 @@ func TestReactionRejectsBadInput(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			resp := postJSON(t, c, ts.URL+tc.url, tc.body)
 			defer resp.Body.Close()
 			if resp.StatusCode != tc.want {

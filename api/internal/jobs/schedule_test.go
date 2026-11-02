@@ -10,6 +10,7 @@ func at(y int, m time.Month, d, h, minute int) time.Time {
 }
 
 func TestDaily(t *testing.T) {
+	t.Parallel()
 	s := Daily(3)
 	cases := []struct{ now, want time.Time }{
 		{at(2026, 11, 2, 1, 0), at(2026, 11, 2, 3, 0)},   // before today's run
@@ -25,6 +26,7 @@ func TestDaily(t *testing.T) {
 }
 
 func TestWeekly(t *testing.T) {
+	t.Parallel()
 	s := Weekly(time.Monday, 9) // 2026-11-02 is a Monday
 	cases := []struct{ now, want time.Time }{
 		{at(2026, 11, 2, 8, 0), at(2026, 11, 2, 9, 0)},  // Monday before 9

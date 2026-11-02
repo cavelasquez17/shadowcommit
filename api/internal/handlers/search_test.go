@@ -38,6 +38,7 @@ func search(t *testing.T, tsURL, q string) searchResult {
 }
 
 func TestThreadSearch(t *testing.T) {
+	t.Parallel()
 	ts, db := newTestServer(t, nil)
 	if err := db.Create(&models.Category{Slug: "the-incident", Name: "The Incident"}).Error; err != nil {
 		t.Fatal(err)
@@ -56,16 +57,19 @@ func TestThreadSearch(t *testing.T) {
 	resp.Body.Close()
 
 	t.Run("matches title", func(t *testing.T) {
+		t.Parallel()
 		if got := search(t, ts.URL, "unrelated"); got.Total != 1 || got.Items[0].ID != plain {
 			t.Errorf("want only %s, got %+v", plain, got)
 		}
 	})
 	t.Run("matches reply body", func(t *testing.T) {
+		t.Parallel()
 		if got := search(t, ts.URL, "zanzibar"); got.Total != 1 || got.Items[0].ID != withReply {
 			t.Errorf("want only %s, got %+v", withReply, got)
 		}
 	})
 	t.Run("percent is literal, not a wildcard", func(t *testing.T) {
+		t.Parallel()
 		if got := search(t, ts.URL, "100%"); got.Total != 1 || got.Items[0].ID != pct {
 			t.Errorf("want only %s, got %+v", pct, got)
 		}
@@ -74,11 +78,13 @@ func TestThreadSearch(t *testing.T) {
 		}
 	})
 	t.Run("underscore is literal", func(t *testing.T) {
+		t.Parallel()
 		if got := search(t, ts.URL, "_"); got.Total != 0 {
 			t.Errorf("no thread contains an underscore, got %d", got.Total)
 		}
 	})
 	t.Run("thread with several matching replies is listed once", func(t *testing.T) {
+		t.Parallel()
 		if got := search(t, ts.URL, "zanzibar"); got.Total != 1 || len(got.Items) != 1 {
 			t.Errorf("want exactly 1 thread, got total=%d items=%d", got.Total, len(got.Items))
 		}

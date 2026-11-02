@@ -59,6 +59,7 @@ func mkCategory(t *testing.T, db *gorm.DB) models.Category {
 }
 
 func TestRefreshHotScoresDecaysOldThreads(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	author, cat := mkUser(t, db, "author"), mkCategory(t, db)
 	old := mkThread(t, db, author, cat, "old-but-popular", 100, now.AddDate(0, 0, -30))
@@ -81,6 +82,7 @@ func TestRefreshHotScoresDecaysOldThreads(t *testing.T) {
 }
 
 func TestRefreshHotScoresIgnoresDeletedThreads(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	author, cat := mkUser(t, db, "author"), mkCategory(t, db)
 	th := mkThread(t, db, author, cat, "gone", 1, now)
@@ -91,6 +93,7 @@ func TestRefreshHotScoresIgnoresDeletedThreads(t *testing.T) {
 }
 
 func TestSendWeeklyDigest(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	a, b := mkUser(t, db, "alice"), mkUser(t, db, "bob")
 	gone := mkUser(t, db, "gone")
@@ -125,6 +128,7 @@ func TestSendWeeklyDigest(t *testing.T) {
 }
 
 func TestSendWeeklyDigestQuietWeek(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	mkUser(t, db, "alice")
 	if n, err := SendWeeklyDigest(context.Background(), db, now); err != nil || n != 0 {

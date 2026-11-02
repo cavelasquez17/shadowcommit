@@ -108,7 +108,7 @@ func TestUpdateThread(t *testing.T) {
 		{"admin", admin, id, editBody("Edited by an admin here", nil), http.StatusOK},
 		{"owner", owner, id, editBody("Edited by the owner here", map[string]any{"sarcasm": 250}), http.StatusOK},
 	}
-	for _, tc := range cases {
+	for _, tc := range cases { //nolint:paralleltest // cases edit one thread in order and the final state is asserted
 		t.Run(tc.name, func(t *testing.T) {
 			resp := patchJSON(t, tc.client, ts.URL+"/api/threads/"+tc.path, tc.body)
 			defer resp.Body.Close()

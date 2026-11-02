@@ -83,7 +83,7 @@ func TestCreateJobValidation(t *testing.T) {
 		{"company too short", map[string]any{"company": "x"}},
 		{"country code too long", map[string]any{"country_code": "COL"}},
 	}
-	for _, tc := range cases {
+	for _, tc := range cases { //nolint:paralleltest // assertions after the loop need every subtest to have finished
 		t.Run(tc.name, func(t *testing.T) {
 			resp := postJSON(t, c, ts.URL+"/api/jobs", jobBody("Valid Co", tc.extra))
 			defer resp.Body.Close()

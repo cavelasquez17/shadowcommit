@@ -3,6 +3,7 @@ package handlers
 import "testing"
 
 func TestSlugifyKeepsAccentedLetters(t *testing.T) {
+	t.Parallel()
 	cases := map[string]string{
 		"El pipeline pasó pero nadie sabe por qué": "el-pipeline-paso-pero-nadie-sabe-por-que",
 		"Fui despedido — ¡Ñandú!":                  "fui-despedido-nandu",

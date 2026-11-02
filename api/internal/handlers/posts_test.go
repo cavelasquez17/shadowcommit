@@ -52,7 +52,7 @@ func TestCreatePostValidationAndErrors(t *testing.T) {
 		{"unknown thread", "/api/threads/thr_nope/posts", map[string]any{"body": "hello there"}, http.StatusNotFound},
 		{"unknown parent", "/api/threads/" + tid + "/posts", map[string]any{"body": "hello there", "parent_id": "pst_nope"}, http.StatusBadRequest},
 	}
-	for _, tc := range cases {
+	for _, tc := range cases { //nolint:paralleltest // assertions after the loop need every subtest to have finished
 		t.Run(tc.name, func(t *testing.T) {
 			resp := postJSON(t, c, ts.URL+tc.url, tc.body)
 			defer resp.Body.Close()
@@ -151,7 +151,7 @@ func TestUpdatePostPermissions(t *testing.T) {
 		{"other member", other, http.StatusForbidden},
 		{"anonymous", &http.Client{}, http.StatusUnauthorized},
 	}
-	for _, tc := range cases {
+	for _, tc := range cases { //nolint:paralleltest // cases edit one post in order and the final state is asserted
 		t.Run(tc.name, func(t *testing.T) {
 			resp := patchJSON(t, tc.client, ts.URL+"/api/posts/"+pid, map[string]any{"body": "Edited by " + tc.name})
 			defer resp.Body.Close()
