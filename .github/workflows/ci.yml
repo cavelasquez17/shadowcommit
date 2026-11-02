@@ -100,11 +100,37 @@ jobs:
           cache-from: type=gha,scope=arm64
           cache-to: type=gha,scope=arm64,mode=max
 
+  # The deployment files are code too: lint the scripts, run the updater's scenario tests with a
+  # fake docker, and validate the compose file and the Caddyfile.
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint shell scripts
+        run: shellcheck deploy/update.sh deploy/test/test-update.sh deploy/test/fake-docker
+
+      - name: Updater scenario tests
+        run: deploy/test/test-update.sh
+
+      - name: Validate the compose file
+        working-directory: deploy
+        run: |
+          cp .env.example .env
+          echo "SHADOWCOMMIT_DOMAIN=ci.example.org" >> .env
+          docker compose config --quiet
+
+      - name: Validate the Caddyfile
+        run: >
+          docker run --rm -e SHADOWCOMMIT_DOMAIN=ci.example.org
+          -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro"
+          caddy:2 caddy validate --config /etc/caddy/Caddyfile
+
   # Publishes the image only after every other job has passed, and only from main: this job can
   # write to the container registry that the host pulls from, so unreviewed branches and pull
   # requests never reach it. A manual dispatch on main publishes the sha tag only.
   publish:
-    needs: [api, web, docker]
+    needs: [api, web, docker, deploy]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
