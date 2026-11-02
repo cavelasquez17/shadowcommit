@@ -30,86 +30,71 @@ ShadowCommit is a satirical social platform where developers declare a "cause of
 - **i18next** for internationalization (en, es, pt)
 - **lucide-react** for icons
 - Path alias: `@/*` → `src/*`
+- **Vitest 5** + jsdom + Testing Library for tests; **oxlint** for linting
+
+### Delivery
+- **GitHub Actions** (`.github/workflows/ci.yml`): `api` (vet + test), `web` (lint + test + build) and `docker` (shellcheck, image build for amd64 and arm64, container smoke test)
+- **Docker**: multi-stage, distroless, non-root image for `linux/amd64` and `linux/arm64`; the API serves the built web app when `STATIC_DIR` is set
+- The production host is a small ARM64 VM; deployment is pull-based (see *Deployment*)
 
 ## Repo map
 
 ```
+.github/
+├── workflows/ci.yml             # api, web, docker jobs
+└── pull_request_template.md     # every PR follows this structure
+Dockerfile, .dockerignore        # production image (see Deployment)
+scripts/smoke-container.sh       # boots a built image and checks it end to end
 api/
-├── cmd/api/main.go              # entry point, flag parsing, graceful shutdown
-├── go.mod
+├── cmd/api/                     # main.go (flags, scheduler wiring, graceful shutdown), healthcheck.go
 └── internal/
     ├── auth/                    # JWT issuer, GitHub OAuth flow
-    ├── config/                  # env-driven Config struct
-    ├── handlers/                # HTTP layer — thin Gin handlers
+    ├── config/                  # env-driven Config; Port(), link-time Version
+    ├── handlers/                # HTTP layer — thin Gin handlers (+ *_test.go, one DB per test)
     │   ├── api.go               # API struct, fail/badRequest/notFound helpers, slugify, meta
     │   ├── router.go            # route registration (the router is HERE)
+    │   ├── static.go            # serves the built SPA when STATIC_DIR is set
     │   ├── dto.go               # response structs + to*Response mappers
-    │   ├── auth.go              # githubStart, githubCallback, devLogin, logout, me
-    │   ├── threads.go           # listThreads, getThread, CRUD, hotScore, resolveTags
-    │   ├── posts.go             # createPost, updatePost, deletePost, recordMentions
-    │   ├── reactions.go         # react (toggle), reactionSummaries
-    │   ├── users.go             # getUser, listUsers, updateProfile, repos, follow, stats, badges
-    │   ├── social.go            # notifications, invites, mentions, searchUsers
+    │   ├── auth.go threads.go posts.go reactions.go users.go social.go jobs.go
+    │   ├── ratelimit.go         # per-key fixed-window limiter
     │   └── vocab.go             # enum options (seniorities, causes, reactions, countries, languages)
-    ├── models/                  # GORM schema — 12 models, AllModels() migration manifest
+    ├── jobs/                    # in-process scheduler + daily hot-score refresh + weekly digest
+    ├── models/                  # GORM schema, AllModels() migration manifest
+    ├── ranking/                 # hot-score formula shared by handlers and jobs
     ├── seed/                    # Reference() categories+badges, Demo() personas+threads
     └── store/                   # Open() DB connection + AutoMigrate, NewPublicID()
 web/
-├── package.json
-├── vite.config.ts               # proxy /api → :8080
+├── vitest.config.ts             # tests; vite.config.ts proxies /api -> :8080
 └── src/
-    ├── App.tsx                  # route definitions
-    ├── main.tsx                 # entry point
-    ├── index.css                # design tokens (@theme), component classes, animations
-    ├── lib/
-    │   ├── api.ts               # typed API client, all interfaces, ApiError
-    │   ├── i18n.ts              # i18next setup, UI_LOCALES
-    │   └── format.ts            # compactNumber, flagEmoji, timeAgo
+    ├── App.tsx  main.tsx  index.css
+    ├── lib/                     # api.ts (typed client), i18n.ts, format.ts (markdown), copium.ts
     ├── store/app.tsx            # AppProvider context: user, meta, unread, copium, helpers
-    ├── components/
-    │   ├── Layout.tsx           # nav, ticker, language picker, search, copium toggle
-    │   ├── ThreadCard.tsx       # feed card
-    │   ├── ReactionBar.tsx      # emoji reaction buttons
-    │   ├── MentionTextarea.tsx  # @mention autocomplete
-    │   ├── Markdown.tsx         # markdown renderer with mention links
-    │   ├── ProfileEditor.tsx    # profile form
-    │   ├── DevLoginBox.tsx      # dev-mode local handle login
-    │   ├── BrandIcons.tsx       # GitHub icon
-    │   └── ui.tsx               # primitives: Avatar, Bar, Chip, EmptyState, SectionTitle, Spinner, StatBox
-    ├── pages/
-    │   ├── Landing.tsx          # hero, stats, how-it-works, hot threads
-    │   ├── Feed.tsx             # sortable/filterable thread list with infinite scroll
-    │   ├── ThreadDetail.tsx     # thread + posts + reaction bar + reply composer
-    │   ├── NewThread.tsx        # thread composer
-    │   ├── Profile.tsx          # public profile, repos, badges, follow button
-    │   ├── Members.tsx          # member directory
-    │   ├── Wall.tsx             # Wall of the Fallen dashboard (CSS bar charts)
-    │   ├── Onboarding.tsx       # first-login profile setup
-    │   ├── Invites.tsx          # invite management + join flow
-    │   └── Notifications.tsx    # notification inbox
-    └── locales/
-        ├── en.json
-        ├── es.json
-        └── pt.json
+    ├── components/              # Layout, ThreadCard, ReactionBar, MentionTextarea, Markdown, ui.tsx ...
+    ├── pages/                   # Landing, Feed, ThreadDetail, NewThread, Profile, Members, Wall,
+    │                            # Jobs, RiskCalculator, Onboarding, Invites, Notifications
+    ├── locales/                 # en.json, es.json, pt.json (must stay in key parity)
+    └── test/                    # setup.ts and factories shared by component tests
 ```
 
 ## Commands
 
 ```bash
-# API
-cd api
-go run ./cmd/api                    # start API on :8080
+# API (from api/)
+go run ./cmd/api                    # start API on :8080 (DEV_LOGIN=true for local login)
 go run ./cmd/api -seed-demo         # + seed demo data
-go test ./...                       # all tests
-go test ./internal/store/... -v     # store layer tests
-go build -o bin/api ./cmd/api       # build binary
+go vet ./... && go test ./... -race # what CI runs
+go test ./... -cover                # coverage per package
+go run ./cmd/api -healthcheck       # probe /healthz on the local port, exit 0 if healthy
 
-# Web
-cd web
-npm install
+# Web (from web/)
+npm ci
 npm run dev                         # Vite dev server :5173
-npm run build                       # tsc + vite build
-npm run lint                        # oxlint
+npm run lint && npm test && npm run build   # what CI runs
+npm run test:watch                  # Vitest in watch mode
+
+# Container (from the repo root; needs BuildKit)
+DOCKER_BUILDKIT=1 docker build --build-arg VERSION=local -t shadowcommit:local .
+scripts/smoke-container.sh shadowcommit:local 18080 local
 ```
 
 ## Hard rules
