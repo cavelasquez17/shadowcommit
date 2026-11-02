@@ -17,15 +17,17 @@ ARG BUILDARCH
 ARG TARGETARCH
 ARG VERSION=dev
 RUN set -eux; \
+    # The compiler prefix (triplet) and the Debian package name differ for amd64:
+    # x86_64-linux-gnu-gcc is shipped by gcc-x86-64-linux-gnu (hyphens, not underscores).
     case "$TARGETARCH" in \
-        arm64) triplet=aarch64-linux-gnu; libc=arm64 ;; \
-        amd64) triplet=x86_64-linux-gnu; libc=amd64 ;; \
+        arm64) triplet=aarch64-linux-gnu; gccpkg=gcc-aarch64-linux-gnu; libc=arm64 ;; \
+        amd64) triplet=x86_64-linux-gnu; gccpkg=gcc-x86-64-linux-gnu; libc=amd64 ;; \
         *) echo "unsupported TARGETARCH=$TARGETARCH" >&2; exit 1 ;; \
     esac; \
     if [ "$TARGETARCH" = "$BUILDARCH" ]; then echo gcc > /cc; \
     else \
         apt-get update; \
-        apt-get install -y --no-install-recommends "gcc-$triplet" "libc6-dev-$libc-cross"; \
+        apt-get install -y --no-install-recommends "$gccpkg" "libc6-dev-$libc-cross"; \
         rm -rf /var/lib/apt/lists/*; \
         echo "$triplet-gcc" > /cc; \
     fi
