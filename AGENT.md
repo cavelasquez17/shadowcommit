@@ -249,11 +249,18 @@ Proceed without asking when: the change is additive, follows existing precedent,
 |---|---------|----------------|
 | 1 | Adds `default:true` to a bool field, resurrecting every "dead" user | Rule 7: no `default:` on bools without a test that persists `false` |
 | 2 | Returns raw `uint` model IDs in JSON | Rule 6: `NewPublicID()` for every external ID |
-| 3 | Hardcodes enum values in React components | Rule 4: enums from `api.meta()` via `useApp()` |
-| 4 | Adds UI text in English only | Rule 5: i18next with keys in en + es + pt |
+| 3 | Hardcodes enum values in React components | Rule 3: enums from `api.meta()` via `useApp()` |
+| 4 | Adds UI text in English only | Rule 4: i18next with keys in en + es + pt |
 | 5 | Uses hex colors in classNames | Rule 5: CSS variables from `@theme` |
 | 6 | Calls `fetch` directly in a component | Rule 2: all calls through `api.ts` |
 | 7 | Writes a solemn, earnest error message | Rule 1: tone is sacred — read existing copy |
 | 8 | Forgets `t.Parallel()` in tests | Go style: every test gets it |
 | 9 | Uses `for i := 0; i < n; i++` | Go 1.22: `for i := range n` |
 | 10 | Commits `shadowcommit.db` or `.env` | Rule 11: never commit these |
+| 11 | Concatenates raw user input into a `LIKE` pattern | Rule 13: use `escapeLike` |
+| 12 | Merges a PR when CI reported "no checks" | Development loop: wait until every job exists and passes |
+| 13 | Puts server addresses, users or tokens in public docs, issues or PRs | Rule 15: placeholders only |
+| 14 | Duplicates a default (port, version) in a second place | Rule 14: `internal/config` owns it |
+| 15 | Adds a `Co-Authored-By` or tool trailer to a commit | Git: authorship is the owner's |
+| 16 | Counts a mutant that fails to compile as "killed" | Testing: the mutant must build |
+| 17 | Bundles several steps or fixes into one commit | Git: every step and every fix is its own commit |
