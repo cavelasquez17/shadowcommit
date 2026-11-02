@@ -28,7 +28,17 @@ type Config struct {
 	// StaticDir, when set, is a directory of built web assets the API serves itself, so a
 	// single origin can host both the SPA and /api. Empty means API-only.
 	StaticDir string
+	// Version identifies the build (the commit SHA in release images), shown on /healthz so a
+	// deploy can be verified from outside. Load copies the package-level Version below.
+	Version string
 }
+
+// Version is stamped at link time:
+//
+//	go build -ldflags "-X github.com/cavelasquez17/shadowcommit/api/internal/config.Version=<sha>"
+//
+// and stays "dev" for local builds.
+var Version = "dev"
 
 func env(key, fallback string) string {
 	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
@@ -36,6 +46,10 @@ func env(key, fallback string) string {
 	}
 	return fallback
 }
+
+// Port returns the listen port. It is exported so the container healthcheck probes the
+// same port, with the same default and trimming, that the server binds.
+func Port() string { return env("PORT", "8080") }
 
 func envBool(key string, fallback bool) bool {
 	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
@@ -51,7 +65,8 @@ func envBool(key string, fallback bool) bool {
 // Load reads config from the environment, applying local-friendly defaults.
 func Load() *Config {
 	c := &Config{
-		Port:               env("PORT", "8080"),
+		Port:               Port(),
+		Version:            Version,
 		Env:                env("APP_ENV", "development"),
 		DBDriver:           env("DB_DRIVER", "sqlite"),
 		DSN:                env("DATABASE_URL", "shadowcommit.db"),

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +28,16 @@ func main() {
 	_ = godotenv.Load()
 
 	withDemo := flag.Bool("seed-demo", false, "seed demo users and threads (no-op if users exist)")
+	healthcheck := flag.Bool("healthcheck", false, "probe /healthz on the local port and exit 0 if healthy (for container HEALTHCHECK)")
 	flag.Parse()
+
+	if *healthcheck {
+		if err := runHealthcheck("http://127.0.0.1:"+config.Port()+"/healthz", 3*time.Second); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	cfg := config.Load()
 

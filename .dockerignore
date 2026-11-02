@@ -1,0 +1,20 @@
+# Never let secrets, local data or build output into the build context.
+.git
+.github
+**/.env*
+!**/.env.example
+**/*.db*
+
+# Dependencies and build output are rebuilt inside the image.
+**/node_modules
+web/dist
+api/shadowcommit
+api/api
+
+# Not needed to build or run.
+.screens
+**/*.md
+LICENSE
+.vscode
+.idea
+.DS_Store

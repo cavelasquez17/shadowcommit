@@ -39,3 +39,32 @@ func TestEnvBool(t *testing.T) {
 		t.Error("unrecognised values must fall back to the default")
 	}
 }
+
+func TestPortDefaultsAndTrims(t *testing.T) {
+	t.Setenv("PORT", "")
+	if got := Port(); got != "8080" {
+		t.Errorf("Port default = %q, want 8080", got)
+	}
+	t.Setenv("PORT", " 9090 ")
+	if got := Port(); got != "9090" {
+		t.Errorf("Port = %q, want the trimmed value", got)
+	}
+	if got := Load().Port; got != "9090" {
+		t.Errorf("Load().Port = %q: Load and Port() must agree", got)
+	}
+}
+
+func TestLoadCopiesTheStampedVersion(t *testing.T) {
+	if Version != "dev" {
+		t.Fatalf("an unstamped build should report dev, got %q", Version)
+	}
+	if got := Load().Version; got != "dev" {
+		t.Errorf("Load().Version = %q, want dev", got)
+	}
+	old := Version
+	Version = "abc1234"
+	t.Cleanup(func() { Version = old })
+	if got := Load().Version; got != "abc1234" {
+		t.Errorf("Load().Version = %q, want the stamped value", got)
+	}
+}
