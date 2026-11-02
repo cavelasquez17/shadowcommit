@@ -218,11 +218,11 @@ Neo-brutalist, loud, unapologetically multicolour. Source of truth: `web/src/ind
 - [ ] **Search API**: full-text search across threads and posts (currently only title/body LIKE)
 - [ ] **Thread pinning/locking** for admin/moderator role (model fields exist, no admin UI)
 - [ ] **Email notifications** (currently only in-app bell icon)
-- [ ] **Rate limiting** on auth and thread creation endpoints
+- [x] **Rate limiting** on auth and write endpoints (per-key fixed window, `internal/handlers/ratelimit.go`)
 - [ ] **Image uploads** in thread bodies (currently markdown text only)
 
 ### Short-term (weeks)
-- [ ] **Job board** — new model `JobPosting` with company, salary, remote, layoff history
+- [x] **Job board** — `JobPosting` model with company, salary, remote; list/detail/create/sponsor/filled/delete endpoints (layoff history still pending, see company profiles)
 - [ ] **Company profiles** — track layoff history, hiring patterns, "community-reported" data
 - [ ] **Moderation tools** — report/flag system, admin dashboard, content moderation queue
 - [ ] **SEO optimization** — server-side rendering for thread pages, OpenGraph tags
