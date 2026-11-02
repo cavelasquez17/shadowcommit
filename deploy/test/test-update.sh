@@ -99,8 +99,8 @@ check "says there is no previous image" out_has 'no previous image'
 
 new_case "a second update while one is running"
 set_running sha256:old
-( exec 8>"$LOCK_FILE"; flock 8; sleep 3 ) & holder=$!
-sleep 0.5; run; wait "$holder"
+( exec 8>"$LOCK_FILE"; flock 8; sleep 1 ) & holder=$!
+sleep 0.3; run; wait "$holder"
 check "exits 0 without doing anything" test "$RC" -eq 0
 check "never pulled" test "$(called 'compose pull')" -eq 0
 check "left the app alone" test "$(running)" = sha256:old
@@ -119,6 +119,14 @@ new_case "a failing notify command does not break the deploy"
 set_running sha256:old; make_notifier 1; run
 check "still exits 0" test "$RC" -eq 0
 check "the new image is running" test "$(running)" = sha256:new
+
+new_case "the default image is the same in update.sh and docker-compose.yml"
+default_in() { grep -o 'SHADOWCOMMIT_IMAGE:-[^}"]*' "$1" | head -n1 | cut -d- -f2-; }
+script_default=$(default_in "$UPDATE")
+compose_default=$(default_in "$HERE/../docker-compose.yml")
+OUT="update.sh: $script_default | compose: $compose_default"
+check "both define a default" test -n "$script_default" -a -n "$compose_default"
+check "and they are identical" test "$script_default" = "$compose_default"
 
 echo
 echo "$cases scenarios, $failures failed checks"
