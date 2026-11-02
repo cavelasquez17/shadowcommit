@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Lets a maintainer rehearse the publish job by hand. A dispatch run publishes only the
-  # immutable sha tag, never the moving main/latest tags.
+  # Lets a maintainer re-run the checks (and, on main, the publish) by hand. Publishing is
+  # restricted to main below: a dispatch on any other branch only runs the checks.
   workflow_dispatch:
 
 # Least privilege by default; only the publish job below is granted anything more.
@@ -100,10 +100,12 @@ jobs:
           cache-from: type=gha,scope=arm64
           cache-to: type=gha,scope=arm64,mode=max
 
-  # Publishes the image only after every other job has passed. Pull requests never publish.
+  # Publishes the image only after every other job has passed, and only from main: this job can
+  # write to the container registry that the host pulls from, so unreviewed branches and pull
+  # requests never reach it. A manual dispatch on main publishes the sha tag only.
   publish:
     needs: [api, web, docker]
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
