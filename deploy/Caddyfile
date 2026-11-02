@@ -1,0 +1,14 @@
+# Caddy obtains and renews the certificate for this host name by itself.
+{$SHADOWCOMMIT_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy app:8080
+}

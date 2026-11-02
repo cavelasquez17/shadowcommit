@@ -63,6 +63,12 @@ npm run lint     # oxlint
 
 Set `VITE_API_BASE` to point the frontend at a non-local API.
 
+## Deployment
+
+The app ships as a multi-arch container image (published to GitHub Container Registry by CI) and is
+deployed pull-based behind Caddy for HTTPS. See [DEPLOY.md](DEPLOY.md) for the architecture, the
+one-time host setup, how a release flows, rollback and troubleshooting.
+
 ## Design language
 
 Neo-brutalist: dark void background with a faint terminal grid, hard 2px borders, offset box-shadows (no rounded corners, no gradients on structure). Color is semantic — toxic lime for CTAs, blood red for the fallen, cyber cyan for info, grape purple for mentions, butter yellow for highlights. Typography: Archivo Black for display, JetBrains Mono for body. Animations: glitch text-shadow, flicker opacity, marquee ticker.

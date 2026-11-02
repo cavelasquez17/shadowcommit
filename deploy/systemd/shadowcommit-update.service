@@ -1,0 +1,19 @@
+# systemd USER unit: checks the registry and updates the stack (see deploy/update.sh).
+# Installed to ~/.config/systemd/user/. %h is the home directory, so nothing host-specific
+# lives in this file.
+[Unit]
+Description=Update ShadowCommit from the container registry
+# No network-online.target ordering: the user manager does not have that system target. If the
+# network is not up yet on boot, the pull fails, update.sh reports it once and retries on the
+# next tick.
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/shadowcommit/deploy
+# Optional overrides such as NOTIFY_CMD or HEALTH_TIMEOUT; the leading "-" makes it optional.
+EnvironmentFile=-%h/shadowcommit/deploy/update.env
+ExecStart=%h/shadowcommit/deploy/update.sh
+# The host runs other workloads on one small CPU: stay out of their way.
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=10min
