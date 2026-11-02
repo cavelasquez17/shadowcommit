@@ -180,6 +180,14 @@ describe('renderMarkdown: safety (the output goes into dangerouslySetInnerHTML)'
     expect(html).not.toContain('\u0000')
   })
 
+  it.each(['Tom & Jerry', 'a &lt; b', '&amp;', '&#60;script&#62;', 'x < y > z', 'say "hi" & \'bye\''])(
+    'shows plain text exactly as typed, entities included: %j',
+    (src) => {
+      const doc = new DOMParser().parseFromString(`<body>${renderMarkdown(src)}</body>`, 'text/html')
+      expect(doc.body.textContent).toBe(src)
+    },
+  )
+
   it('handles empty input', () => {
     expect(renderMarkdown('')).toBe('')
   })
