@@ -139,6 +139,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          # A plain image index: provenance attestations add unknown/unknown entries to it, which
+          # confuse tools that compare digests, such as the host's pull-based deploy script.
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -149,7 +151,7 @@ jobs:
 
       - name: Verify both architectures were published
         run: |
-          ref="ghcr.io/${{ github.repository }}:sha-${{ steps.version.outputs.short }}"
-          docker buildx imagetools inspect "$ref" | tee manifest.txt
-          grep -q 'linux/amd64' manifest.txt
-          grep -q 'linux/arm64' manifest.txt
+          manifest=$(docker buildx imagetools inspect "ghcr.io/${{ github.repository }}:sha-${{ steps.version.outputs.short }}")
+          echo "$manifest"
+          grep -q 'linux/amd64' <<<"$manifest"
+          grep -q 'linux/arm64' <<<"$manifest"
