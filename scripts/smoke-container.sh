@@ -2,11 +2,15 @@
 # Smoke-tests a built ShadowCommit image: it must refuse to boot without a secret, then boot
 # with one, report healthy, serve the SPA and the API, and run as a non-root user.
 #
-# Usage: scripts/smoke-container.sh <image> [host-port]
+# Usage: scripts/smoke-container.sh <image> [host-port] [expected-version]
+#
+# When expected-version is given, /healthz must report exactly that build version, which
+# proves the -X link-time stamping still works (an unstamped build reports "dev").
 set -euo pipefail
 
 IMAGE="${1:?usage: smoke-container.sh <image> [host-port]}"
 PORT="${2:-18080}"
+EXPECT_VERSION="${3:-}"
 NAME="sc-smoke-$$"
 fail() { echo "FAIL: $*" >&2; exit 1; }
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
@@ -30,6 +34,9 @@ for _ in $(seq 1 30); do
 done
 grep -q '"status":"alive"' <<<"${health:-}" || fail "healthz did not answer: ${health:-<nothing>}"
 grep -q '"version":"' <<<"$health" || fail "healthz has no version: $health"
+if [ -n "$EXPECT_VERSION" ]; then
+  grep -q "\"version\":\"$EXPECT_VERSION\"" <<<"$health" || fail "want version '$EXPECT_VERSION', healthz says: $health"
+fi
 
 echo "4/6 serves the SPA, the API, and keeps the JSON 404"
 expect() { # expect <path> <status+type prefix>
