@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Lets a maintainer run the publish job from a branch to rehearse it. Such a run publishes
+  # only the immutable sha tag, never the moving main/latest tags.
+  workflow_dispatch:
 
 # Least privilege by default; only the publish job below is granted anything more.
 permissions:
@@ -94,3 +97,57 @@ jobs:
           build-args: VERSION=${{ env.VERSION }}
           cache-from: type=gha,scope=arm64
           cache-to: type=gha,scope=arm64,mode=max
+
+  # Publishes the image only after every other job has passed. Pull requests never publish.
+  publish:
+    needs: [api, web, docker]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to GitHub Container Registry with the workflow's own token
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: version
+        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      # One multi-platform build: the arm64 binary is cross-compiled, so no emulation is needed.
+      # The layer cache was already warmed by the docker job above.
+      - name: Build and push (linux/amd64, linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.version.outputs.short }}
+          cache-from: |
+            type=gha,scope=amd64
+            type=gha,scope=arm64
+
+      - name: Verify both architectures were published
+        run: |
+          ref="ghcr.io/${{ github.repository }}:sha-${{ steps.version.outputs.short }}"
+          docker buildx imagetools inspect "$ref" | tee manifest.txt
+          grep -q 'linux/amd64' manifest.txt
+          grep -q 'linux/arm64' manifest.txt
