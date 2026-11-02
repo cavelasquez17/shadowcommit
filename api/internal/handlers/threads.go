@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+
+	"github.com/go-playground/validator/v10"
 	"math"
 	"net/http"
 	"strings"
@@ -133,6 +135,11 @@ func (a *API) createThread(c *gin.Context) {
 	u := auth.Current(c)
 	var req threadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		var verrs validator.ValidationErrors
+		if errors.As(err, &verrs) && len(verrs) > 0 && verrs[0].Field() == "Category" {
+			badRequest(c, "Pick a category. Even despair needs filing.")
+			return
+		}
 		badRequest(c, "Title needs 8+ chars and the body needs 20+. Suffering deserves detail.")
 		return
 	}
