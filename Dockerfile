@@ -51,6 +51,8 @@ COPY --from=api /out/shadowcommit /app/shadowcommit
 COPY --from=web /web/dist /app/web
 # distroless has no shell to mkdir with, so /data is created in the build stage; 65532 is the
 # uid of the image's `nonroot` user and must own it for SQLite to write.
+# NOTE: a Docker *named volume* inherits this ownership. A host bind mount does not: use
+# `chown 65532:65532 <dir>` first, or SQLite fails with "unable to open database file".
 COPY --from=api --chown=65532:65532 /out/data /data
 
 # Secrets (JWT_SECRET, GitHub OAuth) are deliberately NOT set here: in production the app
