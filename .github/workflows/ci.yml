@@ -36,3 +36,43 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ci-${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint shell scripts
+        run: shellcheck scripts/*.sh
+
+      - uses: docker/setup-buildx-action@v3
+
+      # The image is built for the host architecture, loaded, and smoke-tested for real:
+      # it must refuse to boot without a secret, report the stamped version, serve the SPA
+      # and the API, turn healthy and run as non-root.
+      - name: Build image (linux/amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: shadowcommit:ci
+          build-args: VERSION=${{ env.VERSION }}
+          cache-from: type=gha,scope=amd64
+          cache-to: type=gha,scope=amd64,mode=max
+
+      - name: Smoke test the image
+        run: scripts/smoke-container.sh shadowcommit:ci 18080 "$VERSION"
+
+      # The production host is arm64. The Go binary is cross-compiled (no emulation), so this
+      # proves the arm64 image builds; it cannot be executed on the amd64 runner.
+      - name: Build image (linux/arm64, cross-compiled)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          build-args: VERSION=${{ env.VERSION }}
+          cache-from: type=gha,scope=arm64
+          cache-to: type=gha,scope=arm64,mode=max
