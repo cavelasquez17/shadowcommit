@@ -1,0 +1,61 @@
+# Production stack: the app plus Caddy for automatic HTTPS.
+#
+# Run from this directory on the host with a .env file next to it (see .env.example).
+# The app image is pulled from GitHub Container Registry; nothing is built on the host.
+name: shadowcommit
+
+services:
+  app:
+    container_name: shadowcommit-app
+    # SHADOWCOMMIT_IMAGE lets the update script pin an exact image when it rolls back.
+    image: ${SHADOWCOMMIT_IMAGE:-ghcr.io/cavelasquez17/shadowcommit:main}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_ENV: production
+      JOBS_ENABLED: "true"
+    volumes:
+      # A named volume inherits the image's ownership of /data (uid 65532). A bind mount would
+      # not: chown 65532:65532 the directory first.
+      - shadowcommit-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # The host also runs other workloads on a single small CPU: keep this service bounded.
+    mem_limit: 512m
+    cpus: 0.5
+    networks:
+      - internal
+
+  caddy:
+    container_name: shadowcommit-caddy
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      SHADOWCOMMIT_DOMAIN: ${SHADOWCOMMIT_DOMAIN:?set SHADOWCOMMIT_DOMAIN in .env}
+    ports:
+      - "80:80"   # Let's Encrypt HTTP-01 challenge and the redirect to HTTPS
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data   # certificates: losing this volume means re-issuing them
+      - caddy-config:/config
+    mem_limit: 128m
+    cpus: 0.25
+    networks:
+      - internal
+
+networks:
+  internal:
+
+volumes:
+  shadowcommit-data:
+  caddy-data:
+  caddy-config:
