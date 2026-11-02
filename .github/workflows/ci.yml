@@ -13,9 +13,11 @@ permissions:
   contents: read
 
 concurrency:
-  # Runs on main publish an image, and cancelling one partway could leave a half-pushed tag, so
-  # they queue (the newest commit finishes last and wins the moving tags). Superseded pull
-  # request runs are cancelled, since only the latest push matters there.
+  # A run on main publishes an image, and cancelling one partway could leave a half-pushed tag,
+  # so main runs are never cancelled. GitHub keeps only ONE pending run per group, though: in a
+  # burst of pushes an intermediate commit's run is dropped (its sha tag is never published) and
+  # the newest commit always runs last, so it wins the moving tags. Superseded pull request runs
+  # are cancelled, since only the latest push matters there.
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
