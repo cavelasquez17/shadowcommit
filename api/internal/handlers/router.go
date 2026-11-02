@@ -92,9 +92,14 @@ func (a *API) Router() *gin.Engine {
 	api.POST("/jobs/:id/filled", required, a.markJobFilled)
 	api.DELETE("/jobs/:id", required, a.deleteJob)
 
-	r.NoRoute(func(c *gin.Context) {
+	apiNotFound := func(c *gin.Context) {
 		fail(c, http.StatusNotFound, "not_found",
 			"That endpoint does not exist. It was deprecated by an intern with an LLM.")
-	})
+	}
+	if a.cfg.StaticDir != "" {
+		r.NoRoute(staticHandler(a.cfg.StaticDir, apiNotFound))
+	} else {
+		r.NoRoute(apiNotFound)
+	}
 	return r
 }
