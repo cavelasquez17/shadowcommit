@@ -38,12 +38,17 @@ case "$1" in
         if [ -n "${FAKE_PRUNE_OLD:-}" ] && [ -f "$FAKE_DIR/running_image" ]; then touch "$FAKE_DIR/pruned_$(cat "$FAKE_DIR/running_image")"; fi
         cp "$FAKE_DIR/registry_image" "$FAKE_DIR/pulled_image" ;;
       up)
+        wait=""; for arg in "$@"; do [ "$arg" = "--wait" ] && wait=1; done
         pin="${SHADOWCOMMIT_IMAGE:-}"
         if [ -z "$pin" ] && [ -n "${FAKE_UP_FAILS:-}" ]; then echo "up failed" >&2; exit 1
         elif [ -z "$pin" ]; then cp "$FAKE_DIR/pulled_image" "$FAKE_DIR/running_image"
         elif [ -f "$FAKE_DIR/tag_$pin" ]; then cat "$FAKE_DIR/tag_$pin" > "$FAKE_DIR/running_image" # a tag keeps its image alive
         elif [ -f "$FAKE_DIR/pruned_$pin" ]; then echo "image $pin was pruned" >&2; exit 1
-        else echo "$pin" > "$FAKE_DIR/running_image"; fi ;;
+        else echo "$pin" > "$FAKE_DIR/running_image"; fi
+        # With --wait, compose fails when the container it just started is not healthy.
+        if [ -n "$wait" ] && [ "$(cat "$FAKE_DIR/health_$(cat "$FAKE_DIR/running_image")" 2>/dev/null || echo healthy)" != healthy ]; then
+          echo "container is unhealthy" >&2; exit 1
+        fi ;;
       *) exit 1 ;;
     esac ;;
   *) exit 1 ;;

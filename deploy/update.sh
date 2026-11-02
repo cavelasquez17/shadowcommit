@@ -13,7 +13,6 @@ DOCKER="${DOCKER:-docker}"
 CONTAINER="${CONTAINER:-shadowcommit-app}"
 IMAGE="${SHADOWCOMMIT_IMAGE:-ghcr.io/cavelasquez17/shadowcommit:main}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"   # seconds to wait for the new container to turn healthy
-HEALTH_INTERVAL="${HEALTH_INTERVAL:-3}"
 LOCK_FILE="${LOCK_FILE:-/tmp/shadowcommit-update.lock}"
 # Local tag that keeps the previous image alive: once :main moves, the old image has no tag and
 # `docker image prune` would delete it, taking the rollback target with it.
@@ -27,16 +26,9 @@ notify() {
 }
 compose() { (cd "$DEPLOY_DIR" && "$DOCKER" compose "$@"); }
 
-wait_healthy() {
-  local waited=0 status
-  while [ "$waited" -lt "$HEALTH_TIMEOUT" ]; do
-    status=$("$DOCKER" inspect --format '{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || echo missing)
-    [ "$status" = healthy ] && return 0
-    sleep "$HEALTH_INTERVAL"
-    waited=$((waited + HEALTH_INTERVAL))
-  done
-  return 1
-}
+# Recreate only the app (Caddy is untouched, so there is no HTTPS blip) and block until its
+# healthcheck passes. Fails if the container cannot start, turns unhealthy, or times out.
+update_app() { compose up -d --no-deps --wait --wait-timeout "$HEALTH_TIMEOUT" app; }
 
 # Never run two updates at once (the timer can fire while a slow one is still going).
 exec 9>"$LOCK_FILE"
@@ -58,9 +50,7 @@ revision=$("$DOCKER" image inspect --format '{{index .Config.Labels "org.opencon
 short="${revision:0:7}"
 log "updating ${old_id:-<none>} -> $new_id (${short:-unknown revision})"
 if [ -n "$old_id" ]; then "$DOCKER" tag "$old_id" "$PREVIOUS_TAG"; fi
-# The old container can still be healthy when "up" fails, so health alone proves nothing:
-# the update only counts as deployed if "up" succeeded AND the app then turns healthy.
-if compose up -d && wait_healthy; then
+if update_app; then
   notify "deployed ${short:-new image}"
   exit 0
 fi
@@ -72,7 +62,7 @@ if [ -z "$old_id" ]; then
 fi
 
 log "rolling back to $old_id (tag $PREVIOUS_TAG)"
-if SHADOWCOMMIT_IMAGE="$PREVIOUS_TAG" compose up -d app && wait_healthy; then
+if SHADOWCOMMIT_IMAGE="$PREVIOUS_TAG" update_app; then
   notify "rolled back to the previous image"
   exit 1
 fi

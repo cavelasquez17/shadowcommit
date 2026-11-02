@@ -16,7 +16,7 @@ new_case() {
   CASE="$1"
   FAKE_DIR=$(mktemp -d)
   export FAKE_DIR DOCKER="$HERE/fake-docker" DEPLOY_DIR="$FAKE_DIR" LOCK_FILE="$FAKE_DIR/lock"
-  export HEALTH_TIMEOUT=2 HEALTH_INTERVAL=1
+  export HEALTH_TIMEOUT=2
   unset NOTIFY_CMD SHADOWCOMMIT_IMAGE FAKE_PRUNE_OLD FAKE_UP_FAILS
   echo "sha256:new" > "$FAKE_DIR/registry_image"
   echo "sha256:aaaaaaa0001" > "$FAKE_DIR/revision"
@@ -60,6 +60,7 @@ new_case "update that turns healthy"
 set_running sha256:old; run
 check "exits 0" test "$RC" -eq 0
 check "now runs the new image" test "$(running)" = sha256:new
+check "recreates only the app, without touching Caddy" grep -q -- 'up -d --no-deps --wait --wait-timeout 2 app' "$FAKE_DIR/calls"
 
 new_case "first deployment that turns healthy"
 run
