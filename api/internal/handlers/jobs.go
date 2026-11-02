@@ -68,10 +68,9 @@ func (a *API) listJobs(c *gin.Context) {
 		return
 	}
 
-	viewer := auth.Current(c)
 	items := make([]jobPostingResponse, 0, len(jobs))
 	for i := range jobs {
-		items = append(items, *toJobPostingResponse(&jobs[i], viewer))
+		items = append(items, *toJobPostingResponse(&jobs[i]))
 	}
 	c.JSON(http.StatusOK, paginated[jobPostingResponse]{
 		Items: items, Total: total, Page: offset/limit + 1,
@@ -87,8 +86,7 @@ func (a *API) getJob(c *gin.Context) {
 	}
 	a.db.Model(&models.JobPosting{}).Where("id = ?", j.ID).UpdateColumn("view_count", j.ViewCount+1)
 
-	viewer := auth.Current(c)
-	c.JSON(http.StatusOK, gin.H{"job": toJobPostingResponse(j, viewer)})
+	c.JSON(http.StatusOK, gin.H{"job": toJobPostingResponse(j)})
 }
 
 // createJob creates a job posting. Any logged-in user can post — the payment
@@ -127,7 +125,7 @@ func (a *API) createJob(c *gin.Context) {
 	}
 
 	j.PostedBy = u
-	c.JSON(http.StatusCreated, gin.H{"job": toJobPostingResponse(&j, u)})
+	c.JSON(http.StatusCreated, gin.H{"job": toJobPostingResponse(&j)})
 }
 
 // toggleSponsored pins or unpins a job. Admin only in MVP — this is the money lever.
@@ -150,7 +148,7 @@ func (a *API) toggleSponsored(c *gin.Context) {
 		serverError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"job": toJobPostingResponse(j, u), "sponsored": j.IsSponsored})
+	c.JSON(http.StatusOK, gin.H{"job": toJobPostingResponse(j), "sponsored": j.IsSponsored})
 }
 
 // markJobFilled takes a job off the market.
@@ -170,7 +168,7 @@ func (a *API) markJobFilled(c *gin.Context) {
 		serverError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"job": toJobPostingResponse(j, u)})
+	c.JSON(http.StatusOK, gin.H{"job": toJobPostingResponse(j)})
 }
 
 // deleteJob soft-deletes a job posting. Owner or admin.
@@ -224,9 +222,9 @@ func (a *API) jobStats(c *gin.Context) {
 		Scan(&bySeniority)
 
 	c.JSON(http.StatusOK, gin.H{
-		"open":          openCount,
-		"sponsored":     sponsoredCount,
-		"by_seniority":  bySeniority,
-		"posted_ago":    time.Now().Format(time.RFC3339),
+		"open":         openCount,
+		"sponsored":    sponsoredCount,
+		"by_seniority": bySeniority,
+		"posted_ago":   time.Now().Format(time.RFC3339),
 	})
 }

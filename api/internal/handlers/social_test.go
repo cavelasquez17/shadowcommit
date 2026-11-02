@@ -18,7 +18,7 @@ type notifList struct {
 
 func TestNotificationsAreScopedToUserAndCanBeMarkedRead(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "notif_owner")
 	fan := devLoginAs(t, ts, "notif_actor")
@@ -66,7 +66,7 @@ type inviteResp struct {
 
 func TestInviteLifecycle(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "inviter")
 
 	created := decodeJSON[inviteResp](t, postJSON(t, owner, ts.URL+"/api/invites", map[string]string{"note": "for my ex-teammate"}))
@@ -110,11 +110,11 @@ func TestInviteLifecycle(t *testing.T) {
 
 func TestInviteCodesAreCaseInsensitiveOnCheckAndCapAtTen(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "inviter_cap")
 
 	var first string
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		code := decodeJSON[inviteResp](t, postJSON(t, owner, ts.URL+"/api/invites", nil)).Invite.Code
 		if i == 0 {
 			first = code
@@ -140,7 +140,7 @@ func TestInviteCodesAreCaseInsensitiveOnCheckAndCapAtTen(t *testing.T) {
 
 func TestMentionsListShowsWhoTaggedYou(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "tagger-one")
 	target := devLoginAs(t, ts, "tagged-one")
@@ -167,7 +167,7 @@ func TestMentionsListShowsWhoTaggedYou(t *testing.T) {
 
 func TestSearchUsersAutocomplete(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	for _, n := range []string{"maria", "mario", "juan"} {
 		devLoginAs(t, ts, n)
 	}
@@ -177,7 +177,7 @@ func TestSearchUsersAutocomplete(t *testing.T) {
 				Username string `json:"username"`
 			} `json:"items"`
 		}](t, mustGet(t, ts.URL+"/api/users/search?q="+q))
-		var r []string
+		r := make([]string, 0, len(out.Items))
 		for _, i := range out.Items {
 			r = append(r, i.Username)
 		}

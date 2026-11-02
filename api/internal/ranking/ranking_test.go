@@ -6,6 +6,7 @@ import (
 )
 
 func TestHotScoreDecaysWithAge(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC)
 	fresh := HotScore(10, now, now)
 	dayOld := HotScore(10, now.Add(-24*time.Hour), now)
@@ -16,6 +17,7 @@ func TestHotScoreDecaysWithAge(t *testing.T) {
 }
 
 func TestHotScoreRewardsReactionsAtEqualAge(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC)
 	created := now.Add(-3 * time.Hour)
 	if HotScore(50, created, now) <= HotScore(1, created, now) {
@@ -24,6 +26,7 @@ func TestHotScoreRewardsReactionsAtEqualAge(t *testing.T) {
 }
 
 func TestHotScoreHandlesZeroAndFutureTimes(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC)
 	if got := HotScore(0, time.Time{}, now); got != HotScore(0, now, now) {
 		t.Errorf("zero createdAt should behave as brand new, got %v", got)

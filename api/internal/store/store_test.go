@@ -10,11 +10,12 @@ import (
 	"github.com/cavelasquez17/shadowcommit/api/internal/config"
 	"github.com/cavelasquez17/shadowcommit/api/internal/models"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
+	"github.com/cavelasquez17/shadowcommit/api/internal/testutil"
 )
 
 func testDB(t *testing.T) *config.Config {
 	t.Helper()
-	return &config.Config{DBDriver: "sqlite", DSN: "file:" + t.Name() + "?mode=memory&cache=shared"}
+	return &config.Config{DBDriver: "sqlite", DSN: testutil.MemoryDSN(t)}
 }
 
 // --- GORM footgun guards ---

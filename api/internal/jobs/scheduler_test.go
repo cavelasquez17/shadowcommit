@@ -22,6 +22,7 @@ func waitFor(t *testing.T, cond func() bool) {
 }
 
 func TestSchedulerRunsJobRepeatedlyUntilStopped(t *testing.T) {
+	t.Parallel()
 	var n atomic.Int32
 	s := New(nil, Job{Name: "count", Schedule: soon, Run: func(context.Context, time.Time) error {
 		n.Add(1)
@@ -39,6 +40,7 @@ func TestSchedulerRunsJobRepeatedlyUntilStopped(t *testing.T) {
 }
 
 func TestSchedulerSurvivesPanicsAndErrors(t *testing.T) {
+	t.Parallel()
 	var panics, errs, healthy atomic.Int32
 	s := New(nil,
 		Job{Name: "panics", Schedule: soon, Run: func(context.Context, time.Time) error {
@@ -61,5 +63,6 @@ func TestSchedulerSurvivesPanicsAndErrors(t *testing.T) {
 }
 
 func TestSchedulerStopWithoutStartIsSafe(t *testing.T) {
+	t.Parallel()
 	New(nil).Stop()
 }

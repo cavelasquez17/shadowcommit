@@ -54,7 +54,7 @@ func TestPortDefaultsAndTrims(t *testing.T) {
 	}
 }
 
-func TestLoadCopiesTheStampedVersion(t *testing.T) {
+func TestLoadCopiesTheStampedVersion(t *testing.T) { //nolint:paralleltest // mutates the package-level Version
 	if Version != "dev" {
 		t.Fatalf("an unstamped build should report dev, got %q", Version)
 	}

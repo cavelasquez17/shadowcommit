@@ -52,7 +52,7 @@ func editBody(title string, extra map[string]any) map[string]any {
 
 func TestGetThreadReturnsPostsInOrderAndCountsViews(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "get_author")
 	id := newThread(t, ts.URL, author, "A thread that gets read", "Body long enough to be a valid thread.")
@@ -86,7 +86,7 @@ func TestGetThreadReturnsPostsInOrderAndCountsViews(t *testing.T) {
 
 func TestUpdateThread(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	owner := devLoginAs(t, ts, "upd_owner")
 	other := devLoginAs(t, ts, "upd_other")
@@ -108,7 +108,7 @@ func TestUpdateThread(t *testing.T) {
 		{"admin", admin, id, editBody("Edited by an admin here", nil), http.StatusOK},
 		{"owner", owner, id, editBody("Edited by the owner here", map[string]any{"sarcasm": 250}), http.StatusOK},
 	}
-	for _, tc := range cases {
+	for _, tc := range cases { //nolint:paralleltest // cases edit one thread in order and the final state is asserted
 		t.Run(tc.name, func(t *testing.T) {
 			resp := patchJSON(t, tc.client, ts.URL+"/api/threads/"+tc.path, tc.body)
 			defer resp.Body.Close()
@@ -129,7 +129,7 @@ func TestUpdateThread(t *testing.T) {
 
 func TestThreadTagsAreDeduplicatedCappedAndCounted(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "tagger")
 
@@ -173,7 +173,7 @@ func TestThreadTagsAreDeduplicatedCappedAndCounted(t *testing.T) {
 
 func TestListCategoriesRespectsSortOrder(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	db.Create(&models.Category{Slug: "zeta", Name: "Zeta", SortOrder: 1})
 	db.Create(&models.Category{Slug: "alpha", Name: "Alpha", SortOrder: 2})
 	db.Create(&models.Category{Slug: "beta", Name: "Beta", SortOrder: 2})
@@ -183,7 +183,7 @@ func TestListCategoriesRespectsSortOrder(t *testing.T) {
 			Slug string `json:"slug"`
 		} `json:"items"`
 	}](t, mustGet(t, ts.URL+"/api/categories"))
-	var order []string
+	order := make([]string, 0, len(out.Items))
 	for _, i := range out.Items {
 		order = append(order, i.Slug)
 	}
@@ -195,7 +195,7 @@ func TestListCategoriesRespectsSortOrder(t *testing.T) {
 
 func TestListThreadsFiltersAndSorts(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	db.Create(&models.Category{Slug: "layoffs", Name: "Layoffs"})
 	alice := devLoginAs(t, ts, "filter_alice")
@@ -219,7 +219,7 @@ func TestListThreadsFiltersAndSorts(t *testing.T) {
 
 	ids := func(q string) []string {
 		l := decodeJSON[searchResult](t, mustGet(t, ts.URL+"/api/threads"+q))
-		var out []string
+		out := make([]string, 0, len(l.Items))
 		for _, i := range l.Items {
 			out = append(out, i.ID)
 		}

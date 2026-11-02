@@ -153,7 +153,7 @@ func (a *API) toPostResponse(p *models.Post, viewer *models.User, siblings []mod
 		ID: p.PublicID, Body: p.Body, Language: p.Language,
 		CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt,
 		IsAnswer: p.IsAnswer, EditedByAI: p.EditedByAI, ReactionCount: p.ReactionCount,
-		Author:    toUserResponse(p.Author, viewer),
+		Author:    toUserResponse(p.Author),
 		Reactions: a.reactionSummaries("post", p.ID, viewer),
 	}
 	if p.ParentID != nil {

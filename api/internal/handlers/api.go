@@ -4,7 +4,6 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"golang.org/x/text/unicode/norm"
 	"log"
 	"net/http"
 	"regexp"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

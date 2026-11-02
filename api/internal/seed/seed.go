@@ -551,7 +551,7 @@ func Demo(db *gorm.DB) error {
 		{
 			PublicID: store.NewPublicID("job"), PostedByID: users[0].ID,
 			Company: "Acme Corp", Title: "Senior Backend Engineer (No AI Co-Pilot Required)",
-			Body: "We need someone who can write Go without asking a chatbot. You will own the API layer, the database schema, and the on-call rotation. We tried replacing our last engineer with an agent swarm. It filed three Jira tickets and took a nap.",
+			Body:     "We need someone who can write Go without asking a chatbot. You will own the API layer, the database schema, and the on-call rotation. We tried replacing our last engineer with an agent swarm. It filed three Jira tickets and took a nap.",
 			ApplyURL: "https://example.com/apply/acme", Location: "Remote", Remote: true,
 			SalaryMin: ptrInt(120000), SalaryMax: ptrInt(160000), Currency: "USD",
 			Seniority: models.SenioritySenior, Language: "en", IsSponsored: true,
@@ -559,7 +559,7 @@ func Demo(db *gorm.DB) error {
 		{
 			PublicID: store.NewPublicID("job"), PostedByID: users[1].ID,
 			Company: "StartupCo", Title: "Full-Stack Developer — Humans Only",
-			Body: "React + Node. We don't care if you use Copilot, but you have to understand what it generates. If you can debug your own code, you're already overqualified for our last hire.",
+			Body:     "React + Node. We don't care if you use Copilot, but you have to understand what it generates. If you can debug your own code, you're already overqualified for our last hire.",
 			ApplyURL: "https://example.com/apply/startupco", Location: "São Paulo, BR", Remote: true,
 			CountryCode: "BR", SalaryMin: ptrInt(80000), SalaryMax: ptrInt(120000), Currency: "USD",
 			Seniority: models.SeniorityMid, Language: "pt",
@@ -567,7 +567,7 @@ func Demo(db *gorm.DB) error {
 		{
 			PublicID: store.NewPublicID("job"), PostedByID: users[2].ID,
 			Company: "Legacy Systems Inc", Title: "Principal Engineer — Load-Bearing Human",
-			Body: "We have a system that has been in production since 2008. Nobody knows how it works. The last person who did was replaced by a prompt. We need someone who can read code older than the LLM that tried to replace them.",
+			Body:     "We have a system that has been in production since 2008. Nobody knows how it works. The last person who did was replaced by a prompt. We need someone who can read code older than the LLM that tried to replace them.",
 			ApplyURL: "https://example.com/apply/legacy", Location: "Berlin, DE", Remote: false,
 			CountryCode: "DE", SalaryMin: ptrInt(150000), SalaryMax: ptrInt(200000), Currency: "EUR",
 			Seniority: models.SeniorityPrincipal, Language: "en", IsSponsored: true,

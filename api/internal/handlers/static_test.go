@@ -20,7 +20,7 @@ const (
 
 // staticServer builds a site directory plus a secret file OUTSIDE it, and boots the API
 // pointed at the site.
-func staticServer(t *testing.T) (*httptest.Server, string) {
+func staticServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	root := t.TempDir()
 	site := filepath.Join(root, "site")
@@ -37,13 +37,13 @@ func staticServer(t *testing.T) (*httptest.Server, string) {
 			t.Fatal(err)
 		}
 	}
-	ts, _, _ := newTestServer(t, func(c *config.Config) { c.StaticDir = site })
-	return ts, site
+	ts, _ := newTestServer(t, func(c *config.Config) { c.StaticDir = site })
+	return ts
 }
 
 func get(t *testing.T, url string, headers map[string]string) (*http.Response, string) {
 	t.Helper()
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func get(t *testing.T, url string, headers map[string]string) (*http.Response, s
 
 func TestStaticServesIndexAtRootWithoutCaching(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	resp, body := get(t, ts.URL+"/", nil)
 	if resp.StatusCode != http.StatusOK || body != indexHTML {
 		t.Fatalf("GET /: got %d %q", resp.StatusCode, body)
@@ -76,7 +76,7 @@ func TestStaticServesIndexAtRootWithoutCaching(t *testing.T) {
 
 func TestStaticHashedAssetsAreCachedForever(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	resp, body := get(t, ts.URL+"/assets/app-abc123.js", nil)
 	if resp.StatusCode != http.StatusOK || body != assetJS {
 		t.Fatalf("asset: got %d %q", resp.StatusCode, body)
@@ -91,7 +91,7 @@ func TestStaticHashedAssetsAreCachedForever(t *testing.T) {
 
 func TestStaticOtherRootFilesAreServedButNotCachedForever(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	resp, body := get(t, ts.URL+"/robots.txt", nil)
 	if resp.StatusCode != http.StatusOK || body != "User-agent: *" {
 		t.Fatalf("robots.txt: got %d %q", resp.StatusCode, body)
@@ -103,7 +103,7 @@ func TestStaticOtherRootFilesAreServedButNotCachedForever(t *testing.T) {
 
 func TestStaticClientRoutesFallBackToIndex(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	for _, path := range []string{"/feed", "/t/thr_abc123", "/u/carlos-v", "/jobs"} {
 		resp, body := get(t, ts.URL+path, nil)
 		if resp.StatusCode != http.StatusOK || body != indexHTML {
@@ -114,7 +114,7 @@ func TestStaticClientRoutesFallBackToIndex(t *testing.T) {
 
 func TestStaticMissingFileWithExtensionIs404NotTheShell(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	resp, body := get(t, ts.URL+"/assets/missing-9f.js", nil)
 	if resp.StatusCode != http.StatusNotFound {
 		t.Fatalf("missing asset: got %d, want 404", resp.StatusCode)
@@ -126,7 +126,7 @@ func TestStaticMissingFileWithExtensionIs404NotTheShell(t *testing.T) {
 
 func TestStaticNeverShadowsTheAPI(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 
 	for _, path := range []string{"/api/nope", "/api/threads/x/y/z", "/api", "/api/"} {
 		resp, body := get(t, ts.URL+path, nil)
@@ -150,7 +150,7 @@ func TestStaticNeverShadowsTheAPI(t *testing.T) {
 
 func TestStaticOnlyServesGetAndHead(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 
 	resp := postJSON(t, http.DefaultClient, ts.URL+"/", map[string]string{})
 	resp.Body.Close()
@@ -158,7 +158,7 @@ func TestStaticOnlyServesGetAndHead(t *testing.T) {
 		t.Errorf("POST /: got %d, want 404", resp.StatusCode)
 	}
 
-	req, _ := http.NewRequest(http.MethodHead, ts.URL+"/", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodHead, ts.URL+"/", http.NoBody)
 	head, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +171,7 @@ func TestStaticOnlyServesGetAndHead(t *testing.T) {
 
 func TestStaticCannotEscapeTheDirectory(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 
 	// Build raw requests so the Go client does not tidy the path before sending it.
 	for _, raw := range []string{
@@ -182,7 +182,7 @@ func TestStaticCannotEscapeTheDirectory(t *testing.T) {
 		"/..%2fsecret.txt",
 		"//../secret.txt",
 	} {
-		req, err := http.NewRequest(http.MethodGet, ts.URL+raw, nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL+raw, http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -200,7 +200,7 @@ func TestStaticCannotEscapeTheDirectory(t *testing.T) {
 
 func TestStaticDirectoryRequestsGetTheShellNeverAListing(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	for _, path := range []string{"/assets/", "/assets"} {
 		resp, body := get(t, ts.URL+path, nil)
 		if resp.StatusCode != http.StatusOK || body != indexHTML {
@@ -211,7 +211,7 @@ func TestStaticDirectoryRequestsGetTheShellNeverAListing(t *testing.T) {
 
 func TestStaticNormalisesDotSegmentsInsideTheDirectory(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	resp, body := get(t, ts.URL+"/assets/../robots.txt", nil)
 	if resp.StatusCode != http.StatusOK || body != "User-agent: *" {
 		t.Errorf("/assets/../robots.txt: got %d %q, want robots.txt", resp.StatusCode, body)
@@ -220,7 +220,7 @@ func TestStaticNormalisesDotSegmentsInsideTheDirectory(t *testing.T) {
 
 func TestStaticSupportsConditionalRequests(t *testing.T) {
 	t.Parallel()
-	ts, _ := staticServer(t)
+	ts := staticServer(t)
 	first, _ := get(t, ts.URL+"/assets/app-abc123.js", nil)
 	lm := first.Header.Get("Last-Modified")
 	if lm == "" {
@@ -234,7 +234,7 @@ func TestStaticSupportsConditionalRequests(t *testing.T) {
 
 func TestWithoutStaticDirTheAPIStaysAPIOnly(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	resp, body := get(t, ts.URL+"/", nil)
 	if resp.StatusCode != http.StatusNotFound || !strings.Contains(body, "not_found") {
 		t.Errorf("GET / without STATIC_DIR: got %d %q, want the JSON 404", resp.StatusCode, body)
@@ -244,7 +244,7 @@ func TestWithoutStaticDirTheAPIStaysAPIOnly(t *testing.T) {
 func TestStaticDirWithoutIndexFailsSafely(t *testing.T) {
 	t.Parallel()
 	empty := t.TempDir()
-	ts, _, _ := newTestServer(t, func(c *config.Config) { c.StaticDir = empty })
+	ts, _ := newTestServer(t, func(c *config.Config) { c.StaticDir = empty })
 	resp, _ := get(t, ts.URL+"/feed", nil)
 	if resp.StatusCode != http.StatusNotFound {
 		t.Errorf("no index.html present: got %d, want 404 rather than a crash", resp.StatusCode)

@@ -14,7 +14,7 @@ import (
 // must never authenticate into a username that belongs to a real GitHub-linked account.
 func TestDevLoginRefusesToImpersonateGitHubUser(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 
 	ghID := int64(42)
 	victim := models.User{
@@ -37,7 +37,7 @@ func TestDevLoginRefusesToImpersonateGitHubUser(t *testing.T) {
 // works, and the JWT is never echoed in the JSON body (it must live only in the cookie).
 func TestDevLoginCreatesNewUserAndNeverLeaksToken(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 
 	resp := postJSON(t, jsonClient(t), ts.URL+"/api/auth/dev-login", map[string]string{"username": "freshdev"})
 	if resp.StatusCode != http.StatusOK {
@@ -56,7 +56,7 @@ func TestDevLoginCreatesNewUserAndNeverLeaksToken(t *testing.T) {
 // break the feature's actual purpose: switching back into a dev-created persona.
 func TestDevLoginReenteringOwnDevAccountStillWorks(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	client := jsonClient(t)
 
 	first := postJSON(t, client, ts.URL+"/api/auth/dev-login", map[string]string{"username": "returning"})
@@ -80,7 +80,7 @@ func TestDevLoginReenteringOwnDevAccountStillWorks(t *testing.T) {
 // previously the flag was only surfaced in /api/meta and never enforced.
 func TestDevLoginRequiresInviteWhenInviteOnly(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, func(c *config.Config) { c.InviteOnly = true })
+	ts, db := newTestServer(t, func(c *config.Config) { c.InviteOnly = true })
 
 	resp := postJSON(t, jsonClient(t), ts.URL+"/api/auth/dev-login", map[string]string{"username": "gatecrasher"})
 	defer resp.Body.Close()
@@ -99,7 +99,7 @@ func TestDevLoginRequiresInviteWhenInviteOnly(t *testing.T) {
 // alongside account creation.
 func TestDevLoginWithValidInviteConsumesIt(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, func(c *config.Config) { c.InviteOnly = true })
+	ts, db := newTestServer(t, func(c *config.Config) { c.InviteOnly = true })
 
 	inviter := models.User{PublicID: store.NewPublicID("usr"), Username: "inviter", Role: "member"}
 	if err := db.Create(&inviter).Error; err != nil {
@@ -132,7 +132,7 @@ func TestDevLoginWithValidInviteConsumesIt(t *testing.T) {
 // after the config default changed.
 func TestDevLoginDisabledReturnsForbidden(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, func(c *config.Config) { c.DevLoginEnabled = false })
+	ts, _ := newTestServer(t, func(c *config.Config) { c.DevLoginEnabled = false })
 
 	resp := postJSON(t, jsonClient(t), ts.URL+"/api/auth/dev-login", map[string]string{"username": "nope"})
 	defer resp.Body.Close()

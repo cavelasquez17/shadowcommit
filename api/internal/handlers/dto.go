@@ -131,8 +131,9 @@ type paginated[T any] struct {
 	Total int64 `json:"total"`
 }
 
-// toUserResponse maps a user. viewer may be nil for anonymous requests.
-func toUserResponse(u *models.User, viewer *models.User) *userResponse {
+// toUserResponse maps a user to its public shape. Callers that need viewer-specific fields
+// (follow state, can-edit) add them afterwards.
+func toUserResponse(u *models.User) *userResponse {
 	if u == nil {
 		return nil
 	}
@@ -231,27 +232,27 @@ func isHTTPURL(s string) bool {
 
 // jobPostingResponse is the public shape of a job listing.
 type jobPostingResponse struct {
-	ID          string     `json:"id"`
-	CreatedAt   time.Time  `json:"created_at"`
-	Company     string     `json:"company"`
-	Title       string     `json:"title"`
-	Body        string     `json:"body"`
-	ApplyURL    string     `json:"apply_url"`
-	Location    string     `json:"location"`
-	Remote      bool       `json:"remote"`
-	CountryCode string     `json:"country_code"`
-	SalaryMin   *int       `json:"salary_min"`
-	SalaryMax   *int       `json:"salary_max"`
-	Currency    string     `json:"currency"`
-	Seniority   string     `json:"seniority"`
-	Language    string     `json:"language"`
-	IsSponsored bool       `json:"is_sponsored"`
-	IsFilled    bool       `json:"is_filled"`
-	ViewCount   int        `json:"view_count"`
+	ID          string        `json:"id"`
+	CreatedAt   time.Time     `json:"created_at"`
+	Company     string        `json:"company"`
+	Title       string        `json:"title"`
+	Body        string        `json:"body"`
+	ApplyURL    string        `json:"apply_url"`
+	Location    string        `json:"location"`
+	Remote      bool          `json:"remote"`
+	CountryCode string        `json:"country_code"`
+	SalaryMin   *int          `json:"salary_min"`
+	SalaryMax   *int          `json:"salary_max"`
+	Currency    string        `json:"currency"`
+	Seniority   string        `json:"seniority"`
+	Language    string        `json:"language"`
+	IsSponsored bool          `json:"is_sponsored"`
+	IsFilled    bool          `json:"is_filled"`
+	ViewCount   int           `json:"view_count"`
 	PostedBy    *userResponse `json:"posted_by,omitempty"`
 }
 
-func toJobPostingResponse(j *models.JobPosting, viewer *models.User) *jobPostingResponse {
+func toJobPostingResponse(j *models.JobPosting) *jobPostingResponse {
 	r := &jobPostingResponse{
 		ID:          j.PublicID,
 		CreatedAt:   j.CreatedAt,
@@ -272,7 +273,7 @@ func toJobPostingResponse(j *models.JobPosting, viewer *models.User) *jobPosting
 		ViewCount:   j.ViewCount,
 	}
 	if j.PostedBy != nil {
-		r.PostedBy = toUserResponse(j.PostedBy, viewer)
+		r.PostedBy = toUserResponse(j.PostedBy)
 	}
 	return r
 }

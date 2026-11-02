@@ -7,7 +7,8 @@ import (
 )
 
 func TestCreateThreadErrorNamesTheMissingField(t *testing.T) {
-	ts, _, _ := newTestServer(t, nil)
+	t.Parallel()
+	ts, _ := newTestServer(t, nil)
 	client := devLoginAs(t, ts, "validation_tester")
 
 	cases := []struct {
@@ -21,6 +22,7 @@ func TestCreateThreadErrorNamesTheMissingField(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			resp := postJSON(t, client, ts.URL+"/api/threads", tc.body)
 			if resp.StatusCode != http.StatusBadRequest {
 				t.Fatalf("want 400, got %d", resp.StatusCode)

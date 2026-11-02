@@ -24,7 +24,7 @@ func (r reactionsResp) count(kind string) (int, bool) {
 
 func TestReactionToggleOnThreadUpdatesCountersAndReputation(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "react_author")
 	fan := devLoginAs(t, ts, "react_fan")
@@ -57,7 +57,7 @@ func TestReactionToggleOnThreadUpdatesCountersAndReputation(t *testing.T) {
 
 func TestReactionKindsAreIndependentAndMineIsPerViewer(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	a := devLoginAs(t, ts, "kinds_a")
 	b := devLoginAs(t, ts, "kinds_b")
@@ -79,7 +79,7 @@ func TestReactionKindsAreIndependentAndMineIsPerViewer(t *testing.T) {
 
 func TestReactionOnPost(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	a := devLoginAs(t, ts, "post_react_a")
 	b := devLoginAs(t, ts, "post_react_b")
@@ -94,7 +94,7 @@ func TestReactionOnPost(t *testing.T) {
 
 func TestReactionRejectsBadInput(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "react_bad")
 	id := newThread(t, ts.URL, c, "Thread for bad reactions", "Body long enough to be a valid thread.")
@@ -111,6 +111,7 @@ func TestReactionRejectsBadInput(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			resp := postJSON(t, c, ts.URL+tc.url, tc.body)
 			defer resp.Body.Close()
 			if resp.StatusCode != tc.want {
@@ -129,7 +130,7 @@ func TestReactionRejectsBadInput(t *testing.T) {
 
 func TestReactionNotifiesAuthorButNotSelf(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "notif_author")
 	fan := devLoginAs(t, ts, "notif_fan")

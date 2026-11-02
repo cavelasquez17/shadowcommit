@@ -9,7 +9,7 @@ import (
 
 func TestCreatePostUpdatesCountersAndNotifiesThreadAuthor(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "post_author")
 	replier := devLoginAs(t, ts, "post_replier")
@@ -37,7 +37,7 @@ func TestCreatePostUpdatesCountersAndNotifiesThreadAuthor(t *testing.T) {
 
 func TestCreatePostValidationAndErrors(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "post_validation")
 	tid := newThread(t, ts.URL, c, "Thread for validation tests", "Body long enough to be a valid thread.")
@@ -52,15 +52,18 @@ func TestCreatePostValidationAndErrors(t *testing.T) {
 		{"unknown thread", "/api/threads/thr_nope/posts", map[string]any{"body": "hello there"}, http.StatusNotFound},
 		{"unknown parent", "/api/threads/" + tid + "/posts", map[string]any{"body": "hello there", "parent_id": "pst_nope"}, http.StatusBadRequest},
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp := postJSON(t, c, ts.URL+tc.url, tc.body)
-			defer resp.Body.Close()
-			if resp.StatusCode != tc.want {
-				t.Errorf("got %d, want %d", resp.StatusCode, tc.want)
-			}
-		})
-	}
+	t.Run("rejected", func(t *testing.T) {
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+				resp := postJSON(t, c, ts.URL+tc.url, tc.body)
+				defer resp.Body.Close()
+				if resp.StatusCode != tc.want {
+					t.Errorf("got %d, want %d", resp.StatusCode, tc.want)
+				}
+			})
+		}
+	})
 	if got := threadByID(t, db, tid).PostCount; got != 0 {
 		t.Errorf("rejected replies must not bump post_count, got %d", got)
 	}
@@ -74,7 +77,7 @@ func TestCreatePostValidationAndErrors(t *testing.T) {
 
 func TestCreatePostRejectedOnLockedThread(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "locked_user")
 	tid := newThread(t, ts.URL, c, "A thread about to be locked", "Body long enough to be a valid thread.")
@@ -94,7 +97,7 @@ func TestCreatePostRejectedOnLockedThread(t *testing.T) {
 
 func TestNestedRepliesFlattenToTopLevelParent(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "nester")
 	tid := newThread(t, ts.URL, c, "A thread with nested replies", "Body long enough to be a valid thread.")
@@ -116,7 +119,7 @@ func TestNestedRepliesFlattenToTopLevelParent(t *testing.T) {
 
 func TestReplyParentMustBelongToSameThread(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	c := devLoginAs(t, ts, "cross_thread")
 	t1 := newThread(t, ts.URL, c, "First thread of two here", "Body long enough to be a valid thread.")
@@ -132,7 +135,7 @@ func TestReplyParentMustBelongToSameThread(t *testing.T) {
 
 func TestUpdatePostPermissions(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	owner := devLoginAs(t, ts, "edit_owner")
 	other := devLoginAs(t, ts, "edit_other")
@@ -151,7 +154,7 @@ func TestUpdatePostPermissions(t *testing.T) {
 		{"other member", other, http.StatusForbidden},
 		{"anonymous", &http.Client{}, http.StatusUnauthorized},
 	}
-	for _, tc := range cases {
+	for _, tc := range cases { //nolint:paralleltest // cases edit one post in order and the final state is asserted
 		t.Run(tc.name, func(t *testing.T) {
 			resp := patchJSON(t, tc.client, ts.URL+"/api/posts/"+pid, map[string]any{"body": "Edited by " + tc.name})
 			defer resp.Body.Close()
@@ -176,7 +179,7 @@ func TestUpdatePostPermissions(t *testing.T) {
 
 func TestDeletePostPermissionsAndCounters(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	owner := devLoginAs(t, ts, "del_owner")
 	other := devLoginAs(t, ts, "del_other")
@@ -222,7 +225,7 @@ func TestDeletePostPermissionsAndCounters(t *testing.T) {
 
 func TestMentionsNotifyMentionedUser(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "mention_author")
 	devLoginAs(t, ts, "mention-target")
@@ -237,7 +240,7 @@ func TestMentionsNotifyMentionedUser(t *testing.T) {
 
 func TestMentionsIgnoreSelfUnknownAndDuplicates(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	ensureCategory(t, db)
 	author := devLoginAs(t, ts, "mention-self")
 	devLoginAs(t, ts, "mention-once")

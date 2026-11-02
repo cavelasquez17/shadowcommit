@@ -24,7 +24,7 @@ func (a *API) getUser(c *gin.Context) {
 		return
 	}
 
-	out := toUserResponse(&u, viewer)
+	out := toUserResponse(&u)
 
 	var followers int64
 	a.db.Model(&models.Follow{}).Where("following_id = ?", u.ID).Count(&followers)
@@ -51,7 +51,6 @@ func (a *API) getUser(c *gin.Context) {
 
 // listUsers is the member directory, filterable by nationality and seniority.
 func (a *API) listUsers(c *gin.Context) {
-	viewer := auth.Current(c)
 	limit, offset := page(c)
 
 	q := a.db.Model(&models.User{})
@@ -97,7 +96,7 @@ func (a *API) listUsers(c *gin.Context) {
 	}
 	items := make([]userResponse, 0, len(users))
 	for i := range users {
-		items = append(items, *toUserResponse(&users[i], viewer))
+		items = append(items, *toUserResponse(&users[i]))
 	}
 	c.JSON(http.StatusOK, paginated[userResponse]{
 		Items: items, Page: offset/limit + 1, Limit: limit, Total: total,
@@ -223,7 +222,7 @@ func (a *API) updateProfile(c *gin.Context) {
 		return
 	}
 	a.awardBadges(u)
-	c.JSON(http.StatusOK, gin.H{"user": toUserResponse(u, u)})
+	c.JSON(http.StatusOK, gin.H{"user": toUserResponse(u)})
 }
 
 type repoRequest struct {

@@ -10,13 +10,14 @@ import (
 	"github.com/cavelasquez17/shadowcommit/api/internal/config"
 	"github.com/cavelasquez17/shadowcommit/api/internal/models"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
+	"github.com/cavelasquez17/shadowcommit/api/internal/testutil"
 )
 
 var now = time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC)
 
 func testDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := store.Open(&config.Config{DBDriver: "sqlite", DSN: "file:" + t.Name() + "?mode=memory&cache=shared"})
+	db, err := store.Open(&config.Config{DBDriver: "sqlite", DSN: testutil.MemoryDSN(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,6 +59,7 @@ func mkCategory(t *testing.T, db *gorm.DB) models.Category {
 }
 
 func TestRefreshHotScoresDecaysOldThreads(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	author, cat := mkUser(t, db, "author"), mkCategory(t, db)
 	old := mkThread(t, db, author, cat, "old-but-popular", 100, now.AddDate(0, 0, -30))
@@ -80,6 +82,7 @@ func TestRefreshHotScoresDecaysOldThreads(t *testing.T) {
 }
 
 func TestRefreshHotScoresIgnoresDeletedThreads(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	author, cat := mkUser(t, db, "author"), mkCategory(t, db)
 	th := mkThread(t, db, author, cat, "gone", 1, now)
@@ -90,6 +93,7 @@ func TestRefreshHotScoresIgnoresDeletedThreads(t *testing.T) {
 }
 
 func TestSendWeeklyDigest(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	a, b := mkUser(t, db, "alice"), mkUser(t, db, "bob")
 	gone := mkUser(t, db, "gone")
@@ -124,6 +128,7 @@ func TestSendWeeklyDigest(t *testing.T) {
 }
 
 func TestSendWeeklyDigestQuietWeek(t *testing.T) {
+	t.Parallel()
 	db := testDB(t)
 	mkUser(t, db, "alice")
 	if n, err := SendWeeklyDigest(context.Background(), db, now); err != nil || n != 0 {

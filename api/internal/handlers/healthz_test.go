@@ -9,7 +9,7 @@ import (
 
 func TestHealthzReportsStatusAndVersion(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, func(c *config.Config) { c.Version = "abc1234" })
+	ts, _ := newTestServer(t, func(c *config.Config) { c.Version = "abc1234" })
 	resp := mustGet(t, ts.URL+"/healthz")
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("healthz: got %d, want 200", resp.StatusCode)

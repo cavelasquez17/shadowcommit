@@ -53,7 +53,7 @@ func listJobs(t *testing.T, tsURL, query string) jobList {
 
 func TestCreateJobNormalizesFieldsAndAppliesDefaults(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_poster")
 
 	j := newJob(t, ts.URL, c, "Acme", map[string]any{"country_code": "co", "currency": "cop"})
@@ -69,7 +69,7 @@ func TestCreateJobNormalizesFieldsAndAppliesDefaults(t *testing.T) {
 
 func TestCreateJobValidation(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_validator")
 
 	cases := []struct {
@@ -83,15 +83,18 @@ func TestCreateJobValidation(t *testing.T) {
 		{"company too short", map[string]any{"company": "x"}},
 		{"country code too long", map[string]any{"country_code": "COL"}},
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp := postJSON(t, c, ts.URL+"/api/jobs", jobBody("Valid Co", tc.extra))
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusBadRequest {
-				t.Errorf("got %d, want 400", resp.StatusCode)
-			}
-		})
-	}
+	t.Run("rejected", func(t *testing.T) {
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+				resp := postJSON(t, c, ts.URL+"/api/jobs", jobBody("Valid Co", tc.extra))
+				defer resp.Body.Close()
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("got %d, want 400", resp.StatusCode)
+				}
+			})
+		}
+	})
 	if got := listJobs(t, ts.URL, "").Total; got != 0 {
 		t.Errorf("rejected postings must not be stored, got %d", got)
 	}
@@ -105,7 +108,7 @@ func TestCreateJobValidation(t *testing.T) {
 
 func TestListJobsIsPublicSortsSponsoredFirstAndFilters(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_lister")
 	// The sponsored job is created FIRST (oldest), so only the sponsorship ordering can
 	// put it on top; plain recency would leave it last.
@@ -141,11 +144,11 @@ func TestListJobsIsPublicSortsSponsoredFirstAndFilters(t *testing.T) {
 
 func TestGetJobCountsViewsAndHandlesUnknown(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "job_viewer")
 	j := newJob(t, ts.URL, c, "Viewed Co", nil)
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		mustGet(t, ts.URL+"/api/jobs/"+j.ID).Body.Close()
 	}
 	resp := mustGet(t, ts.URL+"/api/jobs/"+j.ID)
@@ -166,7 +169,7 @@ func TestGetJobCountsViewsAndHandlesUnknown(t *testing.T) {
 
 func TestSponsorIsAdminOnlyAndToggles(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "spons_owner")
 	j := newJob(t, ts.URL, owner, "Sponsor Me Co", nil)
 
@@ -179,7 +182,7 @@ func TestSponsorIsAdminOnlyAndToggles(t *testing.T) {
 
 func TestSponsorByAdmin(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "spons2_owner")
 	admin := devLoginAs(t, ts, "spons2_admin")
 	makeAdmin(t, db, "spons2_admin")
@@ -204,7 +207,7 @@ func TestSponsorByAdmin(t *testing.T) {
 
 func TestMarkFilledPermissionsAndVisibility(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "fill_owner")
 	other := devLoginAs(t, ts, "fill_other")
 	admin := devLoginAs(t, ts, "fill_admin")
@@ -238,7 +241,7 @@ func TestMarkFilledPermissionsAndVisibility(t *testing.T) {
 
 func TestDeleteJobPermissions(t *testing.T) {
 	t.Parallel()
-	ts, _, _ := newTestServer(t, nil)
+	ts, _ := newTestServer(t, nil)
 	owner := devLoginAs(t, ts, "jdel_owner")
 	other := devLoginAs(t, ts, "jdel_other")
 	j := newJob(t, ts.URL, owner, "Delete Me Co", nil)
@@ -265,7 +268,7 @@ func TestDeleteJobPermissions(t *testing.T) {
 
 func TestJobStatsCountsOpenAndSponsored(t *testing.T) {
 	t.Parallel()
-	ts, db, _ := newTestServer(t, nil)
+	ts, db := newTestServer(t, nil)
 	c := devLoginAs(t, ts, "stats_poster")
 	newJob(t, ts.URL, c, "One Co", map[string]any{"seniority": "senior"})
 	s := newJob(t, ts.URL, c, "Two Co", map[string]any{"seniority": "senior"})
@@ -292,7 +295,11 @@ func TestJobStatsCountsOpenAndSponsored(t *testing.T) {
 
 func mustGet(t *testing.T, u string) *http.Response {
 	t.Helper()
-	resp, err := http.Get(u)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, u, http.NoBody)
+	if err != nil {
+		t.Fatalf("build GET %s: %v", u, err)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("GET %s: %v", u, err)
 	}

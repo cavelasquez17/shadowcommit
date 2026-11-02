@@ -1,0 +1,55 @@
+# Mirrors the lint setup used in our other Go services so the rules feel the same everywhere.
+version: "2"
+linters:
+  # see also https://golangci-lint.run/usage/linters/#enabled-by-default
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - durationcheck
+    - errname
+    - exhaustive
+    - fatcontext
+    - gocheckcompilerdirectives
+    - goprintffuncname
+    - iface
+    - intrange
+    - mirror
+    - musttag
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - noctx
+    - nolintlint
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - reassign
+    - recvcheck
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+  exclusions:
+    rules:
+      # In tests, bodies are closed by decodeJSON or by an explicit Close, through generic
+      # helpers that bodyclose cannot follow, so it reports nearly every request. Real leaks in
+      # test code are therefore not caught; the rule stays on for production code.
+      - path: _test\.go
+        linters:
+          - bodyclose
+  settings:
+    errcheck:
+      exclude-functions:
+        - "(io.Closer).Close"
+    exhaustive:
+      check:
+        - switch
+        - map
+formatters:
+  enable:
+    - gofmt
+    - goimports
