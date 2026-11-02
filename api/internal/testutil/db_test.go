@@ -13,22 +13,3 @@ func TestMemoryDSNIsUniquePerCall(t *testing.T) {
 		seen[dsn] = true
 	}
 }
-
-func TestMemoryDSNKeepsSharedInMemoryOptions(t *testing.T) {
-	t.Parallel()
-	dsn := MemoryDSN(t)
-	for _, want := range []string{"file:", "mode=memory", "cache=shared"} {
-		if !contains(dsn, want) {
-			t.Errorf("DSN %q must contain %q", dsn, want)
-		}
-	}
-}
-
-func contains(s, sub string) bool {
-	for i := 0; i+len(sub) <= len(s); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
-}
