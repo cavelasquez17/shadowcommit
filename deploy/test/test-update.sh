@@ -17,7 +17,7 @@ new_case() {
   FAKE_DIR=$(mktemp -d)
   export FAKE_DIR DOCKER="$HERE/fake-docker" DEPLOY_DIR="$FAKE_DIR" LOCK_FILE="$FAKE_DIR/lock"
   export HEALTH_TIMEOUT=2 STATE_DIR="$FAKE_DIR/state"
-  unset NOTIFY_CMD SHADOWCOMMIT_IMAGE FAKE_PRUNE_OLD FAKE_UP_FAILS
+  unset NOTIFY_CMD SHADOWCOMMIT_IMAGE FAKE_PRUNE_OLD FAKE_UP_FAILS FAKE_PULL_FAILS
   echo "sha256:new" > "$FAKE_DIR/registry_image"
   echo "sha256:aaaaaaa0001" > "$FAKE_DIR/revision"
   echo "$CASE"
@@ -101,6 +101,24 @@ run
 check "a newer image is deployed after the failure" test "$RC" -eq 0
 check "and is running" test "$(running)" = sha256:fixed
 check "the earlier failure is forgotten after a good deploy" test ! -e "$STATE_DIR/failed-image"
+
+new_case "an unreachable registry is reported once, with its own exit code"
+export FAKE_PULL_FAILS=1
+set_running sha256:old; make_notifier 0; run
+check "exits 3, not 1 (that means a rollback)" test "$RC" -eq 3
+check "tells the operator" notes_have 'could not pull'
+check "leaves the app alone" test "$(running)" = sha256:old
+run
+check "keeps exiting 3" test "$RC" -eq 3
+check "but does not repeat the notification" test "$(grep -c 'could not pull' "$FAKE_DIR/notes")" -eq 1
+unset FAKE_PULL_FAILS
+run
+check "recovers once the registry is back (exit 0)" test "$RC" -eq 0
+check "and deploys the new image" test "$(running)" = sha256:new
+export FAKE_PULL_FAILS=1
+run
+check "a new outage is reported again" test "$(grep -c 'could not pull' "$FAKE_DIR/notes")" -eq 2
+unset FAKE_PULL_FAILS
 
 new_case "bad update whose rollback also fails"
 set_running sha256:old; set_health sha256:new unhealthy; set_health sha256:old unhealthy; run

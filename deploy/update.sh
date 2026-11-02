@@ -21,6 +21,7 @@ LOCK_FILE="${LOCK_FILE:-/tmp/shadowcommit-update.lock}"
 # Delete this file to retry the same image on purpose.
 STATE_DIR="${STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/shadowcommit}"
 FAILED_FILE="$STATE_DIR/failed-image"
+PULL_FAILED_FILE="$STATE_DIR/pull-failed"   # present while the registry is unreachable
 # Local tag that keeps the previous image alive: once :main moves, the old image has no tag and
 # `docker image prune` would delete it, taking the rollback target with it.
 PREVIOUS_TAG="${PREVIOUS_TAG:-shadowcommit:previous}"
@@ -45,8 +46,19 @@ if ! flock -n 9; then
 fi
 
 old_id=$("$DOCKER" inspect --format '{{.Image}}' "$CONTAINER" 2>/dev/null || true)
-compose pull app
-new_id=$("$DOCKER" image inspect --format '{{.Id}}' "$IMAGE")
+mkdir -p "$STATE_DIR"
+# A registry or network failure must not look like a rollback (exit 1) nor stay silent, and it
+# must not page anyone every two minutes for the length of an outage: say it once per outage.
+if ! compose pull app || ! new_id=$("$DOCKER" image inspect --format '{{.Id}}' "$IMAGE"); then
+  if [ -e "$PULL_FAILED_FILE" ]; then
+    log "still cannot pull $IMAGE"
+  else
+    : > "$PULL_FAILED_FILE"
+    notify "could not pull $IMAGE; the current version keeps running and the updater will keep trying"
+  fi
+  exit 3
+fi
+rm -f "$PULL_FAILED_FILE"
 
 if [ "$old_id" = "$new_id" ]; then
   log "up to date ($new_id)"
@@ -62,7 +74,6 @@ revision=$("$DOCKER" image inspect --format '{{index .Config.Labels "org.opencon
 short="${revision:0:7}"
 log "updating ${old_id:-<none>} -> $new_id (${short:-unknown revision})"
 if [ -n "$old_id" ]; then "$DOCKER" tag "$old_id" "$PREVIOUS_TAG"; fi
-mkdir -p "$STATE_DIR"
 if update_app; then
   rm -f "$FAILED_FILE"
   notify "deployed ${short:-new image}"
