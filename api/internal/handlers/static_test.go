@@ -43,7 +43,7 @@ func staticServer(t *testing.T) *httptest.Server {
 
 func get(t *testing.T, url string, headers map[string]string) (*http.Response, string) {
 	t.Helper()
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestStaticOnlyServesGetAndHead(t *testing.T) {
 		t.Errorf("POST /: got %d, want 404", resp.StatusCode)
 	}
 
-	req, _ := http.NewRequest(http.MethodHead, ts.URL+"/", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodHead, ts.URL+"/", http.NoBody)
 	head, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -182,7 +182,7 @@ func TestStaticCannotEscapeTheDirectory(t *testing.T) {
 		"/..%2fsecret.txt",
 		"//../secret.txt",
 	} {
-		req, err := http.NewRequest(http.MethodGet, ts.URL+raw, nil)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL+raw, http.NoBody)
 		if err != nil {
 			t.Fatal(err)
 		}

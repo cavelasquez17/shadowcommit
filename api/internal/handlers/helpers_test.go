@@ -65,7 +65,7 @@ func doJSON(t *testing.T, client *http.Client, method, url string, body any) *ht
 	} else {
 		reader = bytes.NewReader(nil)
 	}
-	req, err := http.NewRequest(method, url, reader)
+	req, err := http.NewRequestWithContext(t.Context(), method, url, reader)
 	if err != nil {
 		t.Fatalf("build request: %v", err)
 	}

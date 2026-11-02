@@ -34,11 +34,7 @@ func newThread(t *testing.T, tsURL string, c *http.Client, title, body string) s
 
 func search(t *testing.T, tsURL, q string) searchResult {
 	t.Helper()
-	resp, err := http.Get(tsURL + "/api/threads?q=" + url.QueryEscape(q))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return decodeJSON[searchResult](t, resp)
+	return decodeJSON[searchResult](t, mustGet(t, tsURL+"/api/threads?q="+url.QueryEscape(q)))
 }
 
 func TestThreadSearch(t *testing.T) {

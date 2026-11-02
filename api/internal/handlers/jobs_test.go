@@ -292,7 +292,11 @@ func TestJobStatsCountsOpenAndSponsored(t *testing.T) {
 
 func mustGet(t *testing.T, u string) *http.Response {
 	t.Helper()
-	resp, err := http.Get(u)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, u, http.NoBody)
+	if err != nil {
+		t.Fatalf("build GET %s: %v", u, err)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("GET %s: %v", u, err)
 	}
