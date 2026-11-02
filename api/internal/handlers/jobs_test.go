@@ -38,6 +38,7 @@ func jobBody(company string, extra map[string]any) map[string]any {
 func newJob(t *testing.T, tsURL string, c *http.Client, company string, extra map[string]any) jobResp {
 	t.Helper()
 	resp := postJSON(t, c, tsURL+"/api/jobs", jobBody(company, extra))
+	defer resp.Body.Close() // decodeJSON closes it too; this makes the ownership explicit
 	if resp.StatusCode != http.StatusCreated {
 		t.Fatalf("create job: got %d", resp.StatusCode)
 	}
@@ -48,7 +49,9 @@ func newJob(t *testing.T, tsURL string, c *http.Client, company string, extra ma
 
 func listJobs(t *testing.T, tsURL, query string) jobList {
 	t.Helper()
-	return decodeJSON[jobList](t, mustGet(t, tsURL+"/api/jobs"+query))
+	resp := mustGet(t, tsURL+"/api/jobs"+query)
+	defer resp.Body.Close() // decodeJSON closes it too; this makes the ownership explicit
+	return decodeJSON[jobList](t, resp)
 }
 
 func TestCreateJobNormalizesFieldsAndAppliesDefaults(t *testing.T) {
@@ -149,6 +152,7 @@ func TestGetJobCountsViewsAndHandlesUnknown(t *testing.T) {
 		mustGet(t, ts.URL+"/api/jobs/"+j.ID).Body.Close()
 	}
 	resp := mustGet(t, ts.URL+"/api/jobs/"+j.ID)
+	defer resp.Body.Close()
 	got := decodeJSON[struct {
 		Job jobResp `json:"job"`
 	}](t, resp).Job
@@ -187,6 +191,7 @@ func TestSponsorByAdmin(t *testing.T) {
 
 	for _, want := range []bool{true, false} {
 		resp := postJSON(t, admin, ts.URL+"/api/jobs/"+j.ID+"/sponsor", nil)
+		defer resp.Body.Close()
 		out := decodeJSON[struct {
 			Sponsored bool `json:"sponsored"`
 		}](t, resp)
