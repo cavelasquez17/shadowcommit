@@ -118,11 +118,13 @@ jobs:
         run: |
           cp .env.example .env
           echo "SHADOWCOMMIT_DOMAIN=ci.example.org" >> .env
-          docker compose config --quiet
+          # Capture the output first: "grep -q" closes the pipe on its first match, and under
+          # pipefail the resulting SIGPIPE in docker compose would fail the step at random.
+          rendered=$(docker compose config)
           # A single host name must drive all three public URLs.
-          docker compose config | grep -q 'APP_BASE_URL: https://ci.example.org'
-          docker compose config | grep -q 'WEB_BASE_URL: https://ci.example.org'
-          docker compose config | grep -q 'CORS_ORIGINS: https://ci.example.org'
+          grep -q 'APP_BASE_URL: https://ci.example.org' <<<"$rendered"
+          grep -q 'WEB_BASE_URL: https://ci.example.org' <<<"$rendered"
+          grep -q 'CORS_ORIGINS: https://ci.example.org' <<<"$rendered"
 
       - name: Validate the Caddyfile
         run: >
