@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
-	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/cavelasquez17/shadowcommit/api/internal/auth"
 	"github.com/cavelasquez17/shadowcommit/api/internal/models"
+	"github.com/cavelasquez17/shadowcommit/api/internal/ranking"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 )
 
@@ -286,13 +286,9 @@ func (a *API) toThreadResponse(t *models.Thread, viewer *models.User) *threadRes
 	return out
 }
 
-// hotScore is a Hacker News style decay: reactions matter, but recency matters more.
+// hotScore delegates to the shared ranking formula using the wall clock.
 func hotScore(reactions int, createdAt time.Time) float64 {
-	if createdAt.IsZero() {
-		createdAt = time.Now()
-	}
-	hours := time.Since(createdAt).Hours()
-	return float64(reactions+1) / math.Pow(hours+2, 1.5)
+	return ranking.HotScore(reactions, createdAt, time.Now())
 }
 
 func clamp(v, lo, hi int) int {
