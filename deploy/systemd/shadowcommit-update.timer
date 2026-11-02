@@ -1,0 +1,11 @@
+# Polls the registry every couple of minutes. Pull-based because the host is not reachable from CI.
+[Unit]
+Description=Poll the registry for a new ShadowCommit image
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target
