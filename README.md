@@ -21,27 +21,40 @@ No existing platform combines:
 
 Reddit's r/Layoffs and r/singularity host scattered layoff stories. LinkedIn is a polished façade. No product gives displaced developers a dedicated, multilingual, darkly funny home with a data model built around career death.
 
+## Status
+
+Pre-release (`v0.1.0`): the API, the web app, the test suite, CI and the container image are in place and
+the project is under active development. It is **not deployed yet** and has no users. What is planned
+is tracked in the open issues, starting from the [roadmap](https://github.com/cavelasquez17/shadowcommit/issues/14).
+
 ## Architecture
 
 ```
 shadowcommit/
 ├── api/          Go backend (Gin + GORM, SQLite/Postgres)
-│   ├── cmd/api/          entry point
+│   ├── cmd/api/          entry point, flags, scheduler wiring, health probe
 │   └── internal/
 │       ├── auth/         JWT issuer + GitHub OAuth
 │       ├── config/       env-driven config
-│       ├── handlers/     HTTP layer (thin Gin handlers)
+│       ├── handlers/     HTTP layer (thin Gin handlers) + static SPA serving
+│       ├── jobs/         in-process scheduler: daily hot-score refresh, weekly digest
 │       ├── models/       GORM schema (12 models)
+│       ├── ranking/      the feed's hot-score formula
 │       ├── seed/         reference data + demo personas
-│       └── store/        DB connection + migration + ID generation
-└── web/          React 19 + TypeScript + Vite SPA
-    └── src/
-        ├── components/   Layout, ThreadCard, ReactionBar, Markdown, UI primitives
-        ├── lib/          api.ts (typed client), i18n.ts, format.ts
-        ├── locales/      en.json, es.json, pt.json
-        ├── pages/        Landing, Feed, ThreadDetail, NewThread, Profile, Members, Wall, Onboarding, Invites, Notifications
-        └── store/        app.tsx (global context: session + meta + copium mode)
+│       ├── store/        DB connection + migration + ID generation
+│       └── testutil/     helpers shared by tests
+├── web/          React 19 + TypeScript + Vite SPA
+│   └── src/
+│       ├── components/   Layout, ThreadCard, ReactionBar, Markdown, UI primitives
+│       ├── lib/          api.ts (typed client), i18n.ts, format.ts (markdown renderer)
+│       ├── locales/      en.json, es.json, pt.json
+│       ├── pages/        Landing, Feed, ThreadDetail, NewThread, Profile, Members, Wall, Jobs, RiskCalculator, ...
+│       └── store/        app.tsx (global context: session + meta + copium mode)
+├── deploy/       production compose stack, Caddyfile, pull-based updater (+ tests), systemd units
+├── scripts/      container smoke test
+└── .github/      CI workflows and the pull request template
 ```
+
 
 ## Quick start
 
