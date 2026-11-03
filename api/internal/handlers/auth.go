@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/cavelasquez17/shadowcommit/api/internal/auth"
+	"github.com/cavelasquez17/shadowcommit/api/internal/avatar"
 	"github.com/cavelasquez17/shadowcommit/api/internal/models"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 )
@@ -220,7 +221,7 @@ func (a *API) devLogin(c *gin.Context) {
 			PublicID:        store.NewPublicID("usr"),
 			Username:        username,
 			DisplayName:     username,
-			AvatarURL:       "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=" + username,
+			AvatarURL:       avatar.URLPath(username),
 			Seniority:       models.SenioritySenior,
 			CauseOfDeath:    models.CauseStillAlive,
 			UILanguage:      "en",

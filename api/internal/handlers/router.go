@@ -51,6 +51,7 @@ func (a *API) Router() *gin.Engine {
 	api.GET("/tags", a.listTags)
 	api.GET("/stats", a.stats)
 	api.GET("/invites/check", a.checkInvite)
+	api.GET("/avatars/:username", a.avatarOf)
 
 	// --- Threads ---
 	writeLimit := a.writeLimiter.middleware()
