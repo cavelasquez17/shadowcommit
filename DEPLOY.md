@@ -176,12 +176,12 @@ off the host as well (for example with `rsync` to another machine or to storage 
 cd ~/shadowcommit/deploy
 docker compose stop app
 docker run --rm -v shadowcommit_shadowcommit-data:/data -v "$PWD/backups:/backups" \
-  busybox sh -c 'mv /data/shadowcommit.db /data/shadowcommit.db.replaced && cp /backups/<chosen-copy>.db /data/shadowcommit.db && chown 65532:65532 /data/shadowcommit.db'
+  busybox sh -c 'mv /data/shadowcommit.db /data/shadowcommit.db.replaced && cp /backups/<chosen-copy>.db /data/shadowcommit.db && chown 65532:65532 /data /data/shadowcommit.db'
 docker compose start app
 curl -s https://<your-subdomain>/healthz
 ```
 
-Check the restore before relying on it: the app should report healthy and the expected users should be
+Rehearsed on production data (not the live volume): the copy restored into a scratch volume started healthy with the expected user. The rehearsal needs the data folder owned by the app user too: SQLite creates a journal file next to the database, and a root-owned folder makes every write fail with "attempt to write a readonly database". Check the restore before relying on it: the app should report healthy and the expected users should be
 visible. The file `shadowcommit.db.replaced` is the state before the restore and can be deleted once
 you are satisfied.
 
