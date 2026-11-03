@@ -211,7 +211,7 @@ func (a *API) searchUsers(c *gin.Context) {
 	}
 	var users []models.User
 	a.db.Select("public_id", "username", "display_name", "avatar_url", "country_code", "seniority").
-		Where("LOWER(username) LIKE ? OR LOWER(display_name) LIKE ?", q+"%", "%"+q+"%").
+		Where(`(LOWER(username) LIKE ? ESCAPE '\' OR LOWER(display_name) LIKE ? ESCAPE '\')`, escapeLike(q)+"%", "%"+escapeLike(q)+"%").
 		Order("reputation DESC").Limit(8).Find(&users)
 
 	items := make([]gin.H, 0, len(users))
