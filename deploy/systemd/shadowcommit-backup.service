@@ -1,0 +1,11 @@
+# systemd USER unit: writes and verifies a database copy, then prunes old ones (see deploy/backup.sh).
+[Unit]
+Description=Back up the ShadowCommit database
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/shadowcommit/deploy
+ExecStart=%h/shadowcommit/deploy/backup.sh
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=10min

@@ -31,6 +31,10 @@ case "$1" in
       *) exit 1 ;;
     esac ;;
   tag) echo "$2" > "$FAKE_DIR/tag_$3" ;;
+  exec)
+    # exec <container> /app/shadowcommit -backup <file>: the backup step. FAKE_BACKUP_FAILS=1 fails it.
+    if [ -n "${FAKE_BACKUP_FAILS:-}" ]; then echo "backup failed" >&2; exit 1; fi
+    exit 0 ;;
   compose)
     shift
     case "$1" in

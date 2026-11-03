@@ -28,8 +28,22 @@ func main() {
 	_ = godotenv.Load()
 
 	withDemo := flag.Bool("seed-demo", false, "seed demo users and threads (no-op if users exist)")
+	backupTo := flag.String("backup", "", "write a consistent copy of the database to this file and exit")
 	healthcheck := flag.Bool("healthcheck", false, "probe /healthz on the local port and exit 0 if healthy (for container HEALTHCHECK)")
 	flag.Parse()
+
+	if *backupTo != "" {
+		cfg := config.Load()
+		db, err := store.Open(cfg)
+		if err != nil {
+			log.Fatalf("database: %v", err)
+		}
+		if err := backupDatabase(db, *backupTo); err != nil {
+			log.Fatalf("backup: %v", err)
+		}
+		log.Printf("backup written and verified: %s", *backupTo)
+		return
+	}
 
 	if *healthcheck {
 		if err := runHealthcheck("http://127.0.0.1:"+config.Port()+"/healthz", 3*time.Second); err != nil {

@@ -147,9 +147,43 @@ A failing notifier never breaks a deploy. Without it, everything is still in the
 ## Data and backups
 
 SQLite lives in the `shadowcommit-data` volume (mounted at `/data`) and Caddy's certificates in
-`caddy-data`. A bind mount for `/data` is not writable by the app's non-root user until you
-`chown 65532:65532` it. Backups are tracked separately (issue #41): until they exist, treat the
-volume as the only copy.
+`caddy-data`. Losing the first one loses every account and post.
+
+**Daily copies.** A systemd timer runs `deploy/backup.sh` at 03:30. The app writes a verified copy
+into `deploy/backups/` (`VACUUM INTO`, so it is consistent while the site is in use), and copies
+older than 14 days are removed. A failed copy changes nothing that already exists.
+
+One-time setup on the host, so the app can write there and the deploy user can prune:
+
+```bash
+cd ~/shadowcommit/deploy
+mkdir -p backups
+sudo chown "$USER":65532 backups && chmod 770 backups
+cp systemd/shadowcommit-backup.* ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now shadowcommit-backup.timer
+systemctl --user start shadowcommit-backup.service   # first copy now, to check it works
+ls -lh backups/
+```
+
+**Copies live on the same machine as the data.** They protect against a bad deploy or a corrupted
+database, not against losing the host. Before there are real accounts to protect, copy the folder
+off the host as well (for example with `rsync` to another machine or to storage you own).
+
+**Restore** (stops the app, keeps the current database as a file in case the restore is wrong):
+
+```bash
+cd ~/shadowcommit/deploy
+docker compose stop app
+docker run --rm -v shadowcommit_shadowcommit-data:/data -v "$PWD/backups:/backups" \
+  busybox sh -c 'mv /data/shadowcommit.db /data/shadowcommit.db.replaced && cp /backups/<chosen-copy>.db /data/shadowcommit.db && chown 65532:65532 /data/shadowcommit.db'
+docker compose start app
+curl -s https://<your-subdomain>/healthz
+```
+
+Check the restore before relying on it: the app should report healthy and the expected users should be
+visible. The file `shadowcommit.db.replaced` is the state before the restore and can be deleted once
+you are satisfied.
 
 ## Troubleshooting
 
@@ -158,6 +192,7 @@ volume as the only copy.
 | Browser cannot connect | Ports 80/443 not open in the cloud rules or the host firewall |
 | Certificate error right after the first start | DNS not pointing at the host yet; Caddy retries on its own, see `docker logs shadowcommit-caddy` |
 | App container restarts, log says it refuses to boot | `JWT_SECRET` missing or still the default, or `DEV_LOGIN` set |
+| No backup copies appear | The timer is not enabled, or `deploy/backups` is not writable by the app: run the one-time setup |
 | Login with GitHub fails | The OAuth app's callback URL does not match `https://<your-subdomain>/api/auth/github/callback` |
 | `update.sh` exits 2 | The new image is unhealthy and the rollback also failed: inspect `docker logs shadowcommit-app` |
 | Update never happens | Package is still private (the host cannot pull) or the timer is not enabled |

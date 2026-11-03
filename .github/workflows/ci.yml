@@ -108,10 +108,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Lint shell scripts
-        run: shellcheck deploy/update.sh deploy/test/test-update.sh deploy/test/fake-docker
+        run: shellcheck deploy/update.sh deploy/backup.sh deploy/test/test-update.sh deploy/test/test-backup.sh deploy/test/fake-docker
 
       - name: Updater scenario tests
         run: deploy/test/test-update.sh
+
+      - name: Backup scenario tests
+        run: deploy/test/test-backup.sh
 
       - name: Validate the compose file
         working-directory: deploy
