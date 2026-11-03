@@ -372,5 +372,14 @@
     "pause": "Pausar consejos",
     "play": "Reanudar consejos",
     "tipNumber": "Consejo {{n}} de {{total}}"
+  },
+  "guides": {
+    "feed": {
+      "title": "Cómo funciona el feed",
+      "tip1": "Lo más popular combina reacciones con lo reciente. Ordena por Nuevo para ver lo que acaba de pasar.",
+      "tip2": "Reacciona con el emoji que mejor encaje. Cada uno tiene nombre y una frase con sarcasmo.",
+      "tip3": "Filtra por causa, idioma o país para encontrar personas en tu misma situación.",
+      "tip4": "Cuenta tu historia con el botón Nuevo. Mientras más específica, más gente se reconocerá en ella."
+    }
   }
 }

@@ -372,5 +372,14 @@
     "pause": "Pausar dicas",
     "play": "Retomar dicas",
     "tipNumber": "Dica {{n}} de {{total}}"
+  },
+  "guides": {
+    "feed": {
+      "title": "Como funciona o feed",
+      "tip1": "O Quente combina reações com o que é recente. Ordene por Novo para ver o que acabou de acontecer.",
+      "tip2": "Reaja com o emoji que combina. Cada um tem nome e uma frase irônica.",
+      "tip3": "Filtre por causa, idioma ou país para encontrar pessoas na mesma situação.",
+      "tip4": "Conte sua história com o botão Novo. Quanto mais específica, mais gente vai se reconhecer."
+    }
   }
 }

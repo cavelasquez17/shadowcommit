@@ -372,5 +372,14 @@
     "pause": "Pause tips",
     "play": "Play tips",
     "tipNumber": "Tip {{n}} of {{total}}"
+  },
+  "guides": {
+    "feed": {
+      "title": "How the feed works",
+      "tip1": "Hot ranks by reactions, but newer posts get a boost. Sort by New to see what just happened.",
+      "tip2": "React with the emoji that fits. Each one has a name and a snark line.",
+      "tip3": "Filter by cause of death, language or country to find people in the same situation.",
+      "tip4": "Post your story with the New button. The more specific, the more people will recognise it."
+    }
   }
 }

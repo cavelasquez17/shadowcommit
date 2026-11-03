@@ -7,6 +7,7 @@ import { flagEmoji } from '@/lib/format'
 import { useApp } from '@/store/app'
 import { Chip, EmptyState, SectionTitle, Spinner } from '@/components/ui'
 import { ThreadCard } from '@/components/ThreadCard'
+import { FeatureBanner } from '@/components/FeatureBanner'
 
 const SORTS = ['hot', 'new', 'top', 'active'] as const
 const FILTER_KEYS = ['category', 'tag', 'country', 'seniority', 'cause', 'language', 'q'] as const
@@ -95,6 +96,15 @@ export function Feed() {
         {t('feed.title')}
       </SectionTitle>
 
+      <div className="lg:flex lg:items-start lg:gap-6">
+        <aside className="mb-6 lg:sticky lg:top-4 lg:mb-0 lg:w-64 lg:shrink-0">
+          <FeatureBanner
+            id="feed"
+            title={t('guides.feed.title')}
+            tips={[1, 2, 3, 4].map((n) => t(`guides.feed.tip${n}`))}
+          />
+        </aside>
+        <div className="min-w-0 flex-1">
       <div className="mb-5 flex flex-wrap items-center gap-2">
         {SORTS.map((s) => (
           <button
@@ -234,6 +244,8 @@ export function Feed() {
           )}
         </>
       )}
+        </div>
+      </div>
     </div>
   )
 }
