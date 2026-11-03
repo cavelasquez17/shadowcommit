@@ -175,9 +175,6 @@ off the host as well (for example with `rsync` to another machine or to storage 
 ```bash
 cd ~/shadowcommit/deploy
 docker compose stop app
-docker run --rm -v shadowcommit_shadowcommit-data:/data -v "$PWD/backups:/backups:ro" \
-  --entrypoint /bin/sh gcr.io/distroless/base-debian12 -c 'true' 2>/dev/null || true
-# Put the chosen copy in place as the live database, keeping the old one:
 docker run --rm -v shadowcommit_shadowcommit-data:/data -v "$PWD/backups:/backups" \
   busybox sh -c 'mv /data/shadowcommit.db /data/shadowcommit.db.replaced && cp /backups/<chosen-copy>.db /data/shadowcommit.db && chown 65532:65532 /data/shadowcommit.db'
 docker compose start app
