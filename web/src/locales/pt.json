@@ -380,6 +380,46 @@
       "tip2": "Reaja com o emoji que combina. Cada um tem nome e uma frase irônica.",
       "tip3": "Filtre por causa, idioma ou país para encontrar pessoas na mesma situação.",
       "tip4": "Conte sua história com o botão Novo. Quanto mais específica, mais gente vai se reconhecer."
+    },
+    "jobs": {
+      "title": "Contrate os caídos",
+      "tip1": "As empresas publicam vagas para quem o mercado já deixou para trás. As patrocinadas aparecem primeiro.",
+      "tip2": "Publique com um link real para candidatura. Links que não sejam http ou https são recusados.",
+      "tip3": "Marque a vaga como preenchida quando for ocupada, para ninguém se candidatar a um fantasma.",
+      "tip4": "Só quem publicou a vaga ou um administrador pode editá-la ou removê-la."
+    },
+    "wall": {
+      "title": "Muro dos caídos",
+      "tip1": "Estes números são reportados pela comunidade e agregados. Ninguém é identificado por eles.",
+      "tip2": "O número grande conta quantas formas diferentes a máquina já usou para nos substituir.",
+      "tip3": "As barras mostram cada causa, país, nível e idioma como proporção dos membros.",
+      "tip4": "As porcentagens são arredondadas. Grupos pequenos aparecem como são, sem serem escondidos."
+    },
+    "risk": {
+      "title": "Calculadora de risco",
+      "tip1": "Responda com honestidade: o resultado reflete o que você informa, não um veredito sobre sua carreira.",
+      "tip2": "A pontuação é um guia aproximado de quão exposto um cargo está à automação. Não é uma previsão.",
+      "tip3": "Use para refletir e rir um pouco. Não é conselho de carreira."
+    },
+    "members": {
+      "title": "Os sobreviventes",
+      "tip1": "Todos aqui são sobreviventes segundo o próprio relato. Filtre por país, nível ou causa.",
+      "tip2": "Siga alguém para não perder o que essa pessoa publica.",
+      "tip3": "Os perfis contam a história com as próprias palavras, não com a versão da empresa.",
+      "tip4": "Busque por nome ou usuário para encontrar um ex-colega."
+    },
+    "compose": {
+      "title": "Publique seu incidente",
+      "tip1": "Conte exatamente o que aconteceu. Datas e detalhes tornam a história reconhecível.",
+      "tip2": "Escolha a categoria que combina com sua causa. Você pode adicionar até cinco tags.",
+      "tip3": "O sarcasmo mostra quanto do texto é piada. Baixe se o seu relato for sério.",
+      "tip4": "Nomes de empresas e pessoas são sua decisão. Publique só o que você se sente à vontade para compartilhar."
+    },
+    "invites": {
+      "title": "Convites",
+      "tip1": "A beta é só por convite. Cada código vale 30 dias e funciona uma única vez.",
+      "tip2": "Você pode ter até dez códigos sem uso ao mesmo tempo; distribua com cuidado.",
+      "tip3": "Adicione uma nota para lembrar para quem é cada código."
     }
   }
 }
