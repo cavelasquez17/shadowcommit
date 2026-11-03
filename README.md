@@ -64,7 +64,7 @@ shadowcommit/
 cd api
 go run ./cmd/api              # SQLite at ./shadowcommit.db, port :8080
 go run ./cmd/api -seed-demo   # + demo personas and threads (no-op if users exist)
-go test ./...                 # run all tests
+go test ./... -race          # run all tests with the race detector
 ```
 
 Key env vars: `PORT`, `APP_ENV`, `DB_DRIVER` (sqlite|postgres), `DATABASE_URL`, `JWT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `WEB_BASE_URL`, `CORS_ORIGINS`, `DEV_LOGIN` (dev only), `INVITE_ONLY`, `SEED_DEMO`.
@@ -75,11 +75,25 @@ Key env vars: `PORT`, `APP_ENV`, `DB_DRIVER` (sqlite|postgres), `DATABASE_URL`, 
 cd web
 npm install
 npm run dev      # Vite dev server at :5173, proxies /api to :8080
+npm test         # Vitest + Testing Library
 npm run build    # tsc + vite build → dist/
 npm run lint     # oxlint
 ```
 
 Set `VITE_API_BASE` to point the frontend at a non-local API.
+
+For local sign-in without a GitHub OAuth app, start the API with `DEV_LOGIN=true` (development only; the
+API refuses to boot with it in production).
+
+### Run the production image
+
+```bash
+DOCKER_BUILDKIT=1 docker build -t shadowcommit .
+docker run --rm -p 8080:8080 -e JWT_SECRET="$(openssl rand -hex 32)" -e SEED_DEMO=true shadowcommit
+# open http://localhost:8080 (the API serves the built web app itself)
+```
+
+The image refuses to start in production without a real `JWT_SECRET`.
 
 ## Deployment
 
