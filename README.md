@@ -1,8 +1,13 @@
 # ShadowCommit
 
+[![CI](https://github.com/cavelasquez17/shadowcommit/actions/workflows/ci.yml/badge.svg)](https://github.com/cavelasquez17/shadowcommit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **1000 ways the machine did your job. A support group with a database.**
 
 ShadowCommit is a dark-humor social forum for developers displaced, restructured, or replaced by AI. Users declare a "cause of death" for their career, post threads in their own language, react with emoji-shaped screams, and link the repos that outlived their employment.
+
+![ShadowCommit landing page](docs/images/landing.jpg)
 
 ## What makes it different
 
