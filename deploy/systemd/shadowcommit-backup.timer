@@ -1,0 +1,11 @@
+# Once a day in the early hours. Persistent catches up a run that was missed while the host was off.
+[Unit]
+Description=Daily ShadowCommit database backup
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+AccuracySec=5min
+
+[Install]
+WantedBy=timers.target
