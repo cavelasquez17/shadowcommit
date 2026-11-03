@@ -224,7 +224,7 @@ func (a *API) jobStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"open":         openCount,
 		"sponsored":    sponsoredCount,
-		"by_seniority": bySeniority,
+		"by_seniority": orEmpty(bySeniority),
 		"posted_ago":   time.Now().Format(time.RFC3339),
 	})
 }

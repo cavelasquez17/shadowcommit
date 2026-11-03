@@ -132,3 +132,12 @@ func (a *API) meta(c *gin.Context) {
 		"github_enabled":  a.github != nil,
 	})
 }
+
+// orEmpty returns s, or an empty non-nil slice when s is nil. A nil slice marshals to JSON null,
+// but the API promises arrays (and the web app calls .map on them), so an empty table must be [].
+func orEmpty[T any](s []T) []T {
+	if s == nil {
+		return []T{}
+	}
+	return s
+}
