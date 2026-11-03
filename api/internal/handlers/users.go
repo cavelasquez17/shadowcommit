@@ -69,11 +69,11 @@ func (a *API) listUsers(c *gin.Context) {
 		q = q.Where("is_employed = ?", true)
 	}
 	if v := c.Query("language"); v != "" {
-		q = q.Where("spoken_languages LIKE ?", "%"+strings.ToLower(v)+"%")
+		q = q.Where(`spoken_languages LIKE ? ESCAPE '\'`, "%"+escapeLike(strings.ToLower(v))+"%")
 	}
 	if v := strings.TrimSpace(c.Query("q")); v != "" {
-		like := "%" + strings.ToLower(v) + "%"
-		q = q.Where("LOWER(username) LIKE ? OR LOWER(display_name) LIKE ?", like, like)
+		like := "%" + escapeLike(strings.ToLower(v)) + "%"
+		q = q.Where(`(LOWER(username) LIKE ? ESCAPE '\' OR LOWER(display_name) LIKE ? ESCAPE '\')`, like, like)
 	}
 
 	var total int64
