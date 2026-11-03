@@ -125,6 +125,30 @@ func (a *API) getThread(c *gin.Context) {
 	})
 }
 
+// threadUpdateRequest is what an edit may change. It deliberately has no category: a thread's
+// category is fixed when it is created, and requiring it here made title-only edits fail.
+type threadUpdateRequest struct {
+	Title         string `json:"title" binding:"required,min=8,max=200"`
+	Body          string `json:"body" binding:"required,min=20"`
+	Language      string `json:"language"`
+	Sarcasm       *int   `json:"sarcasm"`
+	NSFWCorporate bool   `json:"nsfw_corporate"`
+}
+
+// threadUpdateError names the field that failed validation, so the user knows what to fix.
+func threadUpdateError(err error) string {
+	var verrs validator.ValidationErrors
+	if errors.As(err, &verrs) && len(verrs) > 0 {
+		switch verrs[0].Field() {
+		case "Title":
+			return "Titles need 8 to 200 characters."
+		case "Body":
+			return "The body needs at least 20 characters. Suffering deserves detail."
+		}
+	}
+	return "Invalid payload."
+}
+
 type threadRequest struct {
 	Title         string   `json:"title" binding:"required,min=8,max=200"`
 	Body          string   `json:"body" binding:"required,min=20"`
@@ -214,9 +238,9 @@ func (a *API) updateThread(c *gin.Context) {
 		fail(c, http.StatusForbidden, "forbidden", "Not your thread. Rewriting history is management's job.")
 		return
 	}
-	var req threadRequest
+	var req threadUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		badRequest(c, "Invalid payload.")
+		badRequest(c, threadUpdateError(err))
 		return
 	}
 	t.Title = strings.TrimSpace(req.Title)
