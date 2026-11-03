@@ -75,4 +75,4 @@ Neo-brutalist: dark void background with a faint terminal grid, hard 2px borders
 
 ## License
 
-Proprietary. All rights reserved.
+[MIT](LICENSE) © 2026 Carlos Velasquez.
