@@ -48,6 +48,9 @@ func main() {
 	if err := seed.Reference(db); err != nil {
 		log.Fatalf("seed reference data: %v", err)
 	}
+	if err := seed.MigrateAvatars(db); err != nil {
+		log.Fatalf("migrate avatars: %v", err)
+	}
 	if *withDemo || os.Getenv("SEED_DEMO") == "true" {
 		if err := seed.Demo(db); err != nil {
 			log.Fatalf("seed demo data: %v", err)

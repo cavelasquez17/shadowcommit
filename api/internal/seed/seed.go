@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/cavelasquez17/shadowcommit/api/internal/avatar"
 	"github.com/cavelasquez17/shadowcommit/api/internal/models"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 )
@@ -383,7 +384,7 @@ func Demo(db *gorm.DB) error {
 			PublicID:        store.NewPublicID("usr"),
 			Username:        du.username,
 			DisplayName:     du.display,
-			AvatarURL:       "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=" + du.username,
+			AvatarURL:       avatar.URLPath(du.username),
 			Bio:             du.bio,
 			CountryCode:     du.country,
 			Seniority:       models.Seniority(du.seniority),
