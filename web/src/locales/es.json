@@ -358,5 +358,10 @@
     "hireBoard": "Publica un puesto",
     "hireHint": "$50 por listado. $200 para fijarlo arriba. Llega a los que la máquina no pudo reemplazar.",
     "footer": "ShadowCommit no corre con plata de VC. Corre con gente que la mandaron a la calle y decidió construir algo."
+  },
+  "errorBoundary": {
+    "title": "Te moriste en el trabajo",
+    "body": "Esta página se cayó. El resto del sitio sigue funcionando, más de lo que te ofreció tu último empleador.",
+    "home": "Ir al inicio"
   }
 }
