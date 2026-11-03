@@ -23,9 +23,10 @@ Reddit's r/Layoffs and r/singularity host scattered layoff stories. LinkedIn is 
 
 ## Status
 
-Pre-release (`v0.1.0`): the API, the web app, the test suite, CI and the container image are in place and
-the project is under active development. It is **not deployed yet** and has no users. What is planned
-is tracked in the open issues, starting from the [roadmap](https://github.com/cavelasquez17/shadowcommit/issues/14).
+Pre-release (`v0.1.0`), live at **https://shadow-commit.duckdns.org**. The deployment is real (HTTPS, GitHub
+sign-in, automatic updates from the container registry) but the community is not: it is **invite-only and
+empty**, with no users besides the maintainer. The project is under active development; what is planned is
+tracked in the open issues, starting from the [roadmap](https://github.com/cavelasquez17/shadowcommit/issues/14).
 
 ## Architecture
 
