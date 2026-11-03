@@ -363,5 +363,14 @@
     "title": "You died on the job",
     "body": "This page crashed. The rest of the site still works, which is more than your last employer offered.",
     "home": "Go home"
+  },
+  "banner": {
+    "dismiss": "Dismiss",
+    "tips": "Tips",
+    "previous": "Previous tip",
+    "next": "Next tip",
+    "pause": "Pause tips",
+    "play": "Play tips",
+    "tipNumber": "Tip {{n}} of {{total}}"
   }
 }

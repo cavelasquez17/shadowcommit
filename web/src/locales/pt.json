@@ -363,5 +363,14 @@
     "title": "Você morreu no trabalho",
     "body": "Esta página caiu. O resto do site continua funcionando, mais do que seu último empregador ofereceu.",
     "home": "Ir para o início"
+  },
+  "banner": {
+    "dismiss": "Ocultar",
+    "tips": "Dicas",
+    "previous": "Dica anterior",
+    "next": "Próxima dica",
+    "pause": "Pausar dicas",
+    "play": "Retomar dicas",
+    "tipNumber": "Dica {{n}} de {{total}}"
   }
 }

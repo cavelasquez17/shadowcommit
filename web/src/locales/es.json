@@ -363,5 +363,14 @@
     "title": "Te moriste en el trabajo",
     "body": "Esta página se cayó. El resto del sitio sigue funcionando, más de lo que te ofreció tu último empleador.",
     "home": "Ir al inicio"
+  },
+  "banner": {
+    "dismiss": "Ocultar",
+    "tips": "Consejos",
+    "previous": "Consejo anterior",
+    "next": "Siguiente consejo",
+    "pause": "Pausar consejos",
+    "play": "Reanudar consejos",
+    "tipNumber": "Consejo {{n}} de {{total}}"
   }
 }
