@@ -101,6 +101,13 @@ The app ships as a multi-arch container image (published to GitHub Container Reg
 deployed pull-based behind Caddy for HTTPS. See [DEPLOY.md](DEPLOY.md) for the architecture, the
 one-time host setup, how a release flows, rollback and troubleshooting.
 
+## Contributing
+
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to set up, what to run
+before opening a pull request and how we work; the plan is in the open issues, starting from the
+[roadmap](https://github.com/cavelasquez17/shadowcommit/issues/14). [AGENT.md](AGENT.md) holds the rules for
+contributions made with an AI assistant.
+
 ## Design language
 
 Neo-brutalist: dark void background with a faint terminal grid, hard 2px borders, offset box-shadows (no rounded corners, no gradients on structure). Color is semantic — toxic lime for CTAs, blood red for the fallen, cyber cyan for info, grape purple for mentions, butter yellow for highlights. Typography: Archivo Black for display, JetBrains Mono for body. Animations: glitch text-shadow, flicker opacity, marquee ticker.
