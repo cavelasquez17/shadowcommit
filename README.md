@@ -13,7 +13,7 @@ ShadowCommit is a dark-humor social forum for developers displaced, restructured
 
 No existing platform combines:
 - A **career-obituary identity model** (cause of death, epitaph, fired-at timestamp, employed/denial status)
-- A **multilingual forum** (9 post locales, 3 UI locales, filter by language)
+- A **multilingual forum** (18 post locales, 3 UI locales, filter by language)
 - A **GitHub-native onboarding** (OAuth pulls repos, marks AI-written code)
 - A **Wall of the Fallen** dashboard (aggregate stats by cause, seniority, country)
 - A **neo-brutalist design language** (hard borders, offset shadows, neon-on-black, terminal grid)
@@ -38,7 +38,7 @@ shadowcommit/
 │       ├── config/       env-driven config
 │       ├── handlers/     HTTP layer (thin Gin handlers) + static SPA serving
 │       ├── jobs/         in-process scheduler: daily hot-score refresh, weekly digest
-│       ├── models/       GORM schema (12 models)
+│       ├── models/       GORM schema (13 models)
 │       ├── ranking/      the feed's hot-score formula
 │       ├── seed/         reference data + demo personas
 │       ├── store/        DB connection + migration + ID generation
