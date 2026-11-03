@@ -51,6 +51,24 @@ docker compose ps           # app should become "healthy"
 curl -s https://<your-subdomain>/healthz
 ```
 
+### First sign-in (the invite-only bootstrap)
+
+`INVITE_ONLY=true` means signing up needs an invite code, but only an existing member can create one, so
+the very first account cannot get in. For that first login only:
+
+```bash
+cd ~/shadowcommit/deploy
+sed -i 's|^INVITE_ONLY=.*|INVITE_ONLY=false|' .env
+docker compose up -d --force-recreate --no-deps app     # sign in with GitHub now
+sed -i 's|^INVITE_ONLY=.*|INVITE_ONLY=true|' .env
+docker compose up -d --force-recreate --no-deps app     # close registration again
+```
+
+While registration is open anyone with the link can create an account, so keep that window short. After
+that, create invite codes from the app's **Invites** page. The same recreate command is needed whenever
+`.env` changes (for example after adding the GitHub client id and secret): a running container keeps the
+environment it was created with.
+
 Then enable automatic updates with systemd user units:
 
 ```bash
