@@ -344,10 +344,10 @@ func (a *API) stats(c *gin.Context) {
 		"total_reactions": totalReactions,
 		"ways_documented": totalThreads, // one thread, one way the machine won
 		"distinct_causes": distinctCauses,
-		"by_cause":        byCause,
-		"by_country":      byCountry,
-		"by_seniority":    bySeniority,
-		"by_language":     byLanguage,
+		"by_cause":        orEmpty(byCause),
+		"by_country":      orEmpty(byCountry),
+		"by_seniority":    orEmpty(bySeniority),
+		"by_language":     orEmpty(byLanguage),
 	})
 }
 
