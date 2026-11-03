@@ -380,6 +380,46 @@
       "tip2": "React with the emoji that fits. Each one has a name and a snark line.",
       "tip3": "Filter by cause of death, language or country to find people in the same situation.",
       "tip4": "Post your story with the New button. The more specific, the more people will recognise it."
+    },
+    "jobs": {
+      "title": "Hire the Fallen",
+      "tip1": "Companies post roles here for people the market already let go. Sponsored posts float to the top.",
+      "tip2": "Post a role with a real apply link. Links that are not http or https are refused.",
+      "tip3": "Mark a role as filled when it is taken, so nobody applies to a ghost.",
+      "tip4": "Only whoever posted a role, or an admin, can edit or remove it."
+    },
+    "wall": {
+      "title": "Wall of the Fallen",
+      "tip1": "These numbers are community-reported and aggregated. Nobody is identified by them.",
+      "tip2": "The big number counts how many distinct ways the machine has replaced us so far.",
+      "tip3": "Bars show each cause, country, seniority and language as a share of members.",
+      "tip4": "Percentages are rounded. Small groups are shown as they are, not hidden."
+    },
+    "risk": {
+      "title": "Risk calculator",
+      "tip1": "Answer honestly: the estimate reflects what you enter, not a verdict on your career.",
+      "tip2": "The score is a rough guide to how exposed a role is to automation. It is not a prediction.",
+      "tip3": "Use it to reflect and to laugh a little. It is not career advice."
+    },
+    "members": {
+      "title": "The survivors",
+      "tip1": "Everyone here is a survivor by their own account. Filter by country, seniority or cause.",
+      "tip2": "Follow someone to keep track of what they post.",
+      "tip3": "Profiles tell the story in their own words, not the company's version.",
+      "tip4": "Search by name or handle to find a former colleague."
+    },
+    "compose": {
+      "title": "Post your incident",
+      "tip1": "Tell us exactly what happened. Dates and details make a story recognisable.",
+      "tip2": "Pick the category that fits your cause of death. You can add up to five tags.",
+      "tip3": "Sarcasm sets how much of the post is a joke. Lower it for a serious account.",
+      "tip4": "Names of companies and people are your call. Post only what you are comfortable sharing."
+    },
+    "invites": {
+      "title": "Invites",
+      "tip1": "This is an invite-only beta. Each code is valid for 30 days and works once.",
+      "tip2": "You can hold up to ten unused codes at a time, so hand them out with care.",
+      "tip3": "Add a note to remember who each code is for."
     }
   }
 }
