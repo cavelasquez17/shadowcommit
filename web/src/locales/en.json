@@ -358,5 +358,10 @@
     "hireBoard": "Post a job",
     "hireHint": "$50 per listing. $200 to pin it to the top. Reach the people the machine couldn't replace.",
     "footer": "ShadowCommit doesn't run on VC money. It runs on people who got fired and decided to build something."
+  },
+  "errorBoundary": {
+    "title": "You died on the job",
+    "body": "This page crashed. The rest of the site still works, which is more than your last employer offered.",
+    "home": "Go home"
   }
 }

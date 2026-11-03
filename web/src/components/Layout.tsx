@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { PageBoundary } from '@/components/ErrorBoundary'
 import { useTranslation } from 'react-i18next'
 import {
   AlertTriangle,
@@ -207,7 +208,9 @@ export function Layout() {
             <span>✨</span> AI-enhanced for your comfort · all complaints have been optimized for positivity
           </div>
         )}
-        <Outlet />
+        <PageBoundary>
+          <Outlet />
+        </PageBoundary>
       </main>
 
       <footer className="border-t-2 border-[var(--color-edge)] bg-[var(--color-ink)]">

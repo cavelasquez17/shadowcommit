@@ -358,5 +358,10 @@
     "hireBoard": "Publique uma vaga",
     "hireHint": "$50 por vaga. $200 para fixar no topo. Alcance quem a máquina não conseguiu substituir.",
     "footer": "ShadowCommit não roda com dinheiro de VC. Roda com gente que foi mandada embora e decidiu construir algo."
+  },
+  "errorBoundary": {
+    "title": "Você morreu no trabalho",
+    "body": "Esta página caiu. O resto do site continua funcionando, mais do que seu último empregador ofereceu.",
+    "home": "Ir para o início"
   }
 }
