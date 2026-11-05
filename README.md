@@ -102,6 +102,11 @@ The app ships as a multi-arch container image (published to GitHub Container Reg
 deployed pull-based behind Caddy for HTTPS. See [DEPLOY.md](DEPLOY.md) for the architecture, the
 one-time host setup, how a release flows, rollback and troubleshooting.
 
+## Privacy
+
+Mood-entry photos are not implemented or collected yet. The planned safeguards and consent requirements
+are documented in [PRIVACY.md](PRIVACY.md).
+
 ## Contributing
 
 Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to set up, what to run
