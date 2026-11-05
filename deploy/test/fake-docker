@@ -6,6 +6,7 @@
 #   running_image    image id the app container runs (absent = no container)
 #   health_<id>      health status of a container running that image (default: healthy)
 #   revision         value of the org.opencontainers.image.revision label
+#   run_url          value of the io.shadowcommit.github.actions.run-url label
 #   tag_<name>       image id a local tag points at (created by `docker tag`)
 #   pruned_<id>      marks an image id that `docker image prune` has deleted
 # FAKE_PULL_FAILS=1 makes `compose pull` fail, as when the registry is unreachable.
@@ -28,6 +29,7 @@ case "$1" in
     case "$4" in
       '{{.Id}}') read_file pulled_image ;;
       *revision*) read_file revision || true ;;
+      *run-url*) read_file run_url || true ;;
       *) exit 1 ;;
     esac ;;
   tag) echo "$2" > "$FAKE_DIR/tag_$3" ;;
