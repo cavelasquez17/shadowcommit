@@ -2,8 +2,10 @@
 package config
 
 import (
+	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -14,6 +16,7 @@ type Config struct {
 	DBDriver    string // "sqlite" or "postgres"
 	DSN         string
 	JWTSecret   string
+	UploadDir   string
 	AppBaseURL  string
 	WebBaseURL  string
 	CORSOrigins []string
@@ -47,6 +50,13 @@ func env(key, fallback string) string {
 	return fallback
 }
 
+func defaultUploadDir(appEnv string) string {
+	if appEnv == "production" {
+		return "/data/uploads"
+	}
+	return "uploads"
+}
+
 // Port returns the listen port. It is exported so the container healthcheck probes the
 // same port, with the same default and trimming, that the server binds.
 func Port() string { return env("PORT", "8080") }
@@ -64,13 +74,15 @@ func envBool(key string, fallback bool) bool {
 
 // Load reads config from the environment, applying local-friendly defaults.
 func Load() *Config {
+	appEnv := env("APP_ENV", "development")
 	c := &Config{
 		Port:               Port(),
 		Version:            Version,
-		Env:                env("APP_ENV", "development"),
+		Env:                appEnv,
 		DBDriver:           env("DB_DRIVER", "sqlite"),
 		DSN:                env("DATABASE_URL", "shadowcommit.db"),
 		JWTSecret:          env("JWT_SECRET", "dev-secret-rotate-me-or-get-fired"),
+		UploadDir:          env("UPLOAD_DIR", defaultUploadDir(appEnv)),
 		AppBaseURL:         env("APP_BASE_URL", "http://localhost:8080"),
 		WebBaseURL:         env("WEB_BASE_URL", "http://localhost:5173"),
 		GitHubClientID:     env("GITHUB_CLIENT_ID", ""),
@@ -86,6 +98,9 @@ func Load() *Config {
 	c.StaticDir = env("STATIC_DIR", "")
 
 	if c.Env == "production" {
+		if err := validateProductionUploadDir(c.UploadDir); err != nil {
+			log.Fatal(err)
+		}
 		if c.JWTSecret == "dev-secret-rotate-me-or-get-fired" {
 			log.Fatal("refusing to boot production with the default JWT_SECRET")
 		}
@@ -94,6 +109,14 @@ func Load() *Config {
 		}
 	}
 	return c
+}
+
+func validateProductionUploadDir(dir string) error {
+	rel, err := filepath.Rel("/data", filepath.Clean(dir))
+	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return errors.New("UPLOAD_DIR must be a dedicated subdirectory of the persistent /data volume")
+	}
+	return nil
 }
 
 // IsGitHubConfigured reports whether OAuth can actually work.

@@ -149,41 +149,58 @@ A failing notifier never breaks a deploy. Without it, everything is still in the
 SQLite lives in the `shadowcommit-data` volume (mounted at `/data`) and Caddy's certificates in
 `caddy-data`. Losing the first one loses every account and post.
 
-**Daily copies.** A systemd timer runs `deploy/backup.sh` at 03:30. The app writes a verified copy
-into `deploy/backups/` (`VACUUM INTO`, so it is consistent while the site is in use), and copies
-older than 14 days are removed. A failed copy changes nothing that already exists.
+**Daily copies.** A systemd timer runs `deploy/backup.sh` at 03:30. The app writes a verified SQLite
+copy (`VACUUM INTO`) and a matching `shadowcommit-<timestamp>.photos.tar.gz` archive into
+`~/.local/state/shadowcommit/backups/`. Both are made under the photo-store lock, so concurrent uploads or deletions
+cannot split the pair. Copies older than 14 days are removed. A failed pair is not retained and
+does not prune existing backups.
 
-One-time setup on the host, so the app can write there and the deploy user can prune:
+Mood-entry photos live in `UPLOAD_DIR` (production default `/data/uploads`) on the persistent
+`shadowcommit-data` volume. A production override must remain a dedicated subdirectory of `/data`.
+Photos are not served from the static web directory. The database and photo archive in a restore must
+have the same timestamp; older database-only backups cannot restore photos. If `UPLOAD_DIR` is
+overridden, use that same path in the restore commands below.
+
+One-time setup on the host, so the app can write there and the deploy user can prune. Backups live
+outside the Git checkout at `~/.local/state/shadowcommit/backups`:
 
 ```bash
-cd ~/shadowcommit/deploy
-mkdir -p backups
-sudo chown "$USER":65532 backups && chmod 770 backups
+BACKUP_DIR="$HOME/.local/state/shadowcommit/backups"
+mkdir -p "$BACKUP_DIR"
+sudo chown "$USER":65532 "$BACKUP_DIR" && chmod 770 "$BACKUP_DIR"
 cp systemd/shadowcommit-backup.* ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now shadowcommit-backup.timer
 systemctl --user start shadowcommit-backup.service   # first copy now, to check it works
-ls -lh backups/
+ls -lh "$BACKUP_DIR"
 ```
 
 **Copies live on the same machine as the data.** They protect against a bad deploy or a corrupted
-database, not against losing the host. Before there are real accounts to protect, copy the folder
-off the host as well (for example with `rsync` to another machine or to storage you own).
+database, not against losing the host. Before there are real accounts to protect, copy
+`~/.local/state/shadowcommit/backups` off the host as well (for example with `rsync` to another
+machine or to storage you own).
 
-**Restore** (stops the app, keeps the current database as a file in case the restore is wrong):
+**Restore** (stops the app, keeps the current database and photos as files in case the restore is
+wrong; choose a database and photo archive with the same timestamp):
 
 ```bash
-cd ~/shadowcommit/deploy
+BACKUP_DIR="$HOME/.local/state/shadowcommit/backups"
 docker compose stop app
-docker run --rm -v shadowcommit_shadowcommit-data:/data -v "$PWD/backups:/backups" \
-  busybox sh -c 'mv /data/shadowcommit.db /data/shadowcommit.db.replaced && cp /backups/<chosen-copy>.db /data/shadowcommit.db && chown 65532:65532 /data /data/shadowcommit.db'
+docker run --rm -v shadowcommit_shadowcommit-data:/data -v "$BACKUP_DIR:/backups:ro" \
+  busybox sh -c 'mv /data/shadowcommit.db /data/shadowcommit.db.replaced && \
+    if [ -d /data/uploads ]; then mv /data/uploads /data/uploads.replaced; fi && \
+    cp "/backups/shadowcommit-<chosen-timestamp>.db" /data/shadowcommit.db && \
+    mkdir -p /data/uploads && \
+    tar -xzf "/backups/shadowcommit-<chosen-timestamp>.photos.tar.gz" -C /data/uploads && \
+    chown -R 65532:65532 /data && chmod 700 /data/uploads && \
+    find /data/uploads -type f -exec chmod 600 {} +'
 docker compose start app
 curl -s https://<your-subdomain>/healthz
 ```
 
 Rehearsed on production data (not the live volume): the copy restored into a scratch volume started healthy with the expected user. The rehearsal needs the data folder owned by the app user too: SQLite creates a journal file next to the database, and a root-owned folder makes every write fail with "attempt to write a readonly database". Check the restore before relying on it: the app should report healthy and the expected users should be
-visible. The file `shadowcommit.db.replaced` is the state before the restore and can be deleted once
-you are satisfied.
+visible, and mood-entry photos should load for their owners. The `.replaced` files/directories are
+the state before the restore and can be deleted once you are satisfied.
 
 ## Troubleshooting
 
@@ -192,7 +209,7 @@ you are satisfied.
 | Browser cannot connect | Ports 80/443 not open in the cloud rules or the host firewall |
 | Certificate error right after the first start | DNS not pointing at the host yet; Caddy retries on its own, see `docker logs shadowcommit-caddy` |
 | App container restarts, log says it refuses to boot | `JWT_SECRET` missing or still the default, or `DEV_LOGIN` set |
-| No backup copies appear | The timer is not enabled, or `deploy/backups` is not writable by the app: run the one-time setup |
+| No backup copies appear | The timer is not enabled, or `~/.local/state/shadowcommit/backups` is not writable by the app: run the one-time setup |
 | Login with GitHub fails | The OAuth app's callback URL does not match `https://<your-subdomain>/api/auth/github/callback` |
 | `update.sh` exits 2 | The new image is unhealthy and the rollback also failed: inspect `docker logs shadowcommit-app` |
 | Update never happens | Package is still private (the host cannot pull) or the timer is not enabled |

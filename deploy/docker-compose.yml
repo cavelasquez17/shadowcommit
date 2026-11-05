@@ -23,9 +23,9 @@ services:
       # A named volume inherits the image's ownership of /data (uid 65532). A bind mount would
       # not: chown 65532:65532 the directory first.
       - shadowcommit-data:/data
-      # Daily copies written by the app itself (see backup.sh). Owned by the app user's group so
-      # the app can write and the host user can prune. Set up once: see DEPLOY.md.
-      - ./backups:/backups
+      # Daily database + mood-photo archives written by the app itself (see backup.sh). This path
+      # stays outside the git checkout and is owned by the app user's group; see DEPLOY.md.
+      - ${HOME}/.local/state/shadowcommit/backups:/backups
     read_only: true
     tmpfs:
       - /tmp

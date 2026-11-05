@@ -1,12 +1,18 @@
 package main
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
+	"image"
+	"image/png"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/cavelasquez17/shadowcommit/api/internal/config"
 	"github.com/cavelasquez17/shadowcommit/api/internal/models"
+	"github.com/cavelasquez17/shadowcommit/api/internal/moodphoto"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 	"github.com/cavelasquez17/shadowcommit/api/internal/testutil"
 )
@@ -72,4 +78,85 @@ func TestVerifyBackupRejectsADamagedFile(t *testing.T) {
 	if err := verifyBackup(path); err == nil {
 		t.Error("a damaged file must not pass as a verified backup")
 	}
+}
+
+func TestBackupPairContainsDatabaseAndMoodPhotos(t *testing.T) {
+	t.Parallel()
+	db, err := store.Open(&config.Config{DBDriver: "sqlite", DSN: testutil.MemoryDSN(t)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&models.User{PublicID: store.NewPublicID("usr"), Username: "mood-backup"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	photos := moodphoto.New(t.TempDir())
+	var key string
+	if err := photos.WithExclusive(func() error {
+		var err error
+		key, _, err = photos.Save(bytes.NewReader(backupPNG(t)))
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "snapshot.db")
+	photoPath := filepath.Join(dir, "snapshot.photos.tar.gz")
+	if err := backupPair(db, dbPath, photoPath, photos); err != nil {
+		t.Fatalf("backup pair: %v", err)
+	}
+	if err := verifyBackup(dbPath); err != nil {
+		t.Fatalf("database backup: %v", err)
+	}
+
+	archive, err := os.Open(photoPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer archive.Close()
+	gz, err := gzip.NewReader(archive)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer gz.Close()
+	header, err := tar.NewReader(gz).Next()
+	if err != nil {
+		t.Fatalf("photo archive entry: %v", err)
+	}
+	if header.Name != key {
+		t.Errorf("photo archive contains %q, want %q", header.Name, key)
+	}
+}
+
+func TestBackupPairRemovesDatabaseCopyWhenPhotoArchiveFails(t *testing.T) {
+	t.Parallel()
+	db, err := store.Open(&config.Config{DBDriver: "sqlite", DSN: testutil.MemoryDSN(t)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "snapshot.db")
+	photoPath := filepath.Join(dir, "existing.photos.tar.gz")
+	if err := os.WriteFile(photoPath, []byte("preserve existing archive"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	err = backupPair(db, dbPath, photoPath, moodphoto.New(t.TempDir()))
+	if err == nil {
+		t.Fatal("expected refusing to replace an existing photo archive")
+	}
+	if _, statErr := os.Stat(dbPath); !os.IsNotExist(statErr) {
+		t.Errorf("incomplete database copy remains: %v", statErr)
+	}
+	if got, readErr := os.ReadFile(photoPath); readErr != nil || string(got) != "preserve existing archive" {
+		t.Errorf("existing archive changed: %q, %v", got, readErr)
+	}
+}
+
+func backupPNG(t *testing.T) []byte {
+	t.Helper()
+	var out bytes.Buffer
+	if err := png.Encode(&out, image.NewRGBA(image.Rect(0, 0, 8, 8))); err != nil {
+		t.Fatal(err)
+	}
+	return out.Bytes()
 }
