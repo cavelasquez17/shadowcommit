@@ -34,7 +34,10 @@ These touch accounts or security settings and are done by the repository owner, 
 
 ## One-time host setup
 
-On the host, as the deploy user (a member of the `docker` group):
+Provide a Linux host with Docker Engine and its Compose plugin, Git, and systemd user services. The
+deploy user must belong to the `docker` group; install these using the host distribution's package
+instructions before continuing. Chat notifications additionally need `curl` and `python3` on the
+host. Then, as the deploy user:
 
 ```bash
 git clone https://github.com/<owner>/shadowcommit.git ~/shadowcommit
@@ -78,6 +81,30 @@ systemctl --user daemon-reload
 systemctl --user enable --now shadowcommit-update.timer
 loginctl enable-linger "$USER"      # keep the timer running when nobody is logged in
 ```
+
+### Chat deploy notifications (optional)
+
+The updater can post success, failure and rollback messages to a Slack-compatible incoming webhook.
+Create the webhook in your chat workspace, then store its URL only in the host's ignored
+`deploy/update.env` file. The URL is a secret; do not paste it in `.env`, shell history, or this repo.
+
+```bash
+cd ~/shadowcommit/deploy
+umask 077
+cat > update.env <<'EOF'
+NOTIFY_CMD=/home/<deploy-user>/shadowcommit/deploy/notify-chat.sh
+CHAT_WEBHOOK_URL=https://<chat-provider>/<secret-webhook-path>
+EOF
+chmod 600 update.env
+systemctl --user daemon-reload
+systemctl --user start shadowcommit-update.service
+```
+
+The service loads `update.env`; `notify-chat.sh` sends one JSON-encoded message and does not print the
+webhook URL. Notifications include the full commit SHA and link to the GitHub Actions run that built
+the image. An image built before run-link metadata was added falls back to its commit page. A notifier
+failure is logged without failing an otherwise healthy deployment. Leave `NOTIFY_CMD` unset to use the
+journal only.
 
 ## How a release flows
 
@@ -132,17 +159,12 @@ SHADOWCOMMIT_IMAGE=ghcr.io/<owner>/shadowcommit:sha-<short> docker compose up -d
 
 Re-enable the timer when the fix is merged.
 
-### Notifications (optional)
+### Notifications
 
-`update.sh` can report deploys, failures and rollbacks. Put the path of a script in
-`~/shadowcommit/deploy/update.env` and the systemd service loads it:
-
-```bash
-NOTIFY_CMD=/path/to/your/notify-script   # called with ONE argument: the message
-```
-
-A failing notifier never breaks a deploy. Without it, everything is still in the journal
-(`journalctl --user -u shadowcommit-update.service`).
+When configured, success, failed health checks, and rollback outcomes are sent to the chat webhook
+with the full image commit SHA and workflow run link. Registry outage notices have no candidate
+release yet, so they identify the image that could not be pulled instead. All messages also appear in
+the systemd journal (`journalctl --user -u shadowcommit-update.service`).
 
 ## Data and backups
 
@@ -196,3 +218,4 @@ you are satisfied.
 | Login with GitHub fails | The OAuth app's callback URL does not match `https://<your-subdomain>/api/auth/github/callback` |
 | `update.sh` exits 2 | The new image is unhealthy and the rollback also failed: inspect `docker logs shadowcommit-app` |
 | Update never happens | Package is still private (the host cannot pull) or the timer is not enabled |
+| Deploy message missing | Check `update.env` permissions and `journalctl --user -u shadowcommit-update.service`; notifier failures do not stop deployments |

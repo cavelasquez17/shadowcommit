@@ -108,10 +108,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Lint shell scripts
-        run: shellcheck deploy/update.sh deploy/backup.sh deploy/test/test-update.sh deploy/test/test-backup.sh deploy/test/fake-docker
+        run: shellcheck deploy/update.sh deploy/notify-chat.sh deploy/backup.sh deploy/test/test-update.sh deploy/test/test-notify-chat.sh deploy/test/test-backup.sh deploy/test/fake-docker deploy/test/fake-curl
 
       - name: Updater scenario tests
         run: deploy/test/test-update.sh
+
+      - name: Chat notification tests
+        run: deploy/test/test-notify-chat.sh
 
       - name: Backup scenario tests
         run: deploy/test/test-backup.sh
@@ -163,6 +166,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
+          labels: |
+            io.shadowcommit.github.actions.run-url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           # sha-<short> is immutable and always published. The moving tags are published only for
           # a real push to main: a manual dispatch (even on main) must never move them.
           tags: |

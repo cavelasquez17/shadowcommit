@@ -26,6 +26,7 @@ PULL_FAILED_FILE="$STATE_DIR/pull-failed"   # present while the registry is unre
 # `docker image prune` would delete it, taking the rollback target with it.
 PREVIOUS_TAG="${PREVIOUS_TAG:-shadowcommit:previous}"
 NOTIFY_CMD="${NOTIFY_CMD:-}"             # optional: called with one message argument
+RUN_URL_LABEL='io.shadowcommit.github.actions.run-url'
 
 log() { echo "$(date -u +%FT%TZ) $*"; }
 notify() {
@@ -72,26 +73,30 @@ fi
 
 revision=$("$DOCKER" image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE" 2>/dev/null || true)
 short="${revision:0:7}"
+run_url=$("$DOCKER" image inspect --format "{{index .Config.Labels \"$RUN_URL_LABEL\"}}" "$IMAGE" 2>/dev/null || true)
+commit="${revision:-unknown revision}"
+run_link="${run_url:-https://github.com/cavelasquez17/shadowcommit/commit/${revision:-unknown}}"
+release="commit $commit; run $run_link"
 log "updating ${old_id:-<none>} -> $new_id (${short:-unknown revision})"
 if [ -n "$old_id" ]; then "$DOCKER" tag "$old_id" "$PREVIOUS_TAG"; fi
 if update_app; then
   rm -f "$FAILED_FILE"
-  notify "deployed ${short:-new image}"
+  notify "deployed $release"
   exit 0
 fi
 
 echo "$new_id" > "$FAILED_FILE"
 
-notify "new image ${short:-?} did not start healthy (waited up to ${HEALTH_TIMEOUT}s)"
+notify "new image did not start healthy (waited up to ${HEALTH_TIMEOUT}s); $release"
 if [ -z "$old_id" ]; then
-  notify "first deployment failed and there is no previous image to roll back to"
+  notify "first deployment failed and there is no previous image to roll back to; $release"
   exit 2
 fi
 
 log "rolling back to $old_id (tag $PREVIOUS_TAG)"
 if SHADOWCOMMIT_IMAGE="$PREVIOUS_TAG" update_app; then
-  notify "rolled back to the previous image"
+  notify "rolled back to the previous image after $release"
   exit 1
 fi
-notify "ROLLBACK FAILED: the app is not healthy and needs attention"
+notify "ROLLBACK FAILED: the app is not healthy and needs attention after $release"
 exit 2

@@ -19,7 +19,8 @@ new_case() {
   export HEALTH_TIMEOUT=2 STATE_DIR="$FAKE_DIR/state"
   unset NOTIFY_CMD SHADOWCOMMIT_IMAGE FAKE_PRUNE_OLD FAKE_UP_FAILS FAKE_PULL_FAILS
   echo "sha256:new" > "$FAKE_DIR/registry_image"
-  echo "sha256:aaaaaaa0001" > "$FAKE_DIR/revision"
+  echo "abcdef1234567890abcdef1234567890abcdef12" > "$FAKE_DIR/revision"
+  echo "https://github.com/cavelasquez17/shadowcommit/actions/runs/12345" > "$FAKE_DIR/run_url"
   echo "$CASE"
 }
 set_running() { echo "$1" > "$FAKE_DIR/running_image"; }
@@ -50,6 +51,11 @@ check() {
   fi
 }
 
+new_notifications_have_release_details() {
+  grep -Fq 'abcdef1234567890abcdef1234567890abcdef12' "$FAKE_DIR/notes" &&
+    grep -Fq 'https://github.com/cavelasquez17/shadowcommit/actions/runs/12345' "$FAKE_DIR/notes"
+}
+
 new_case "already up to date"
 set_running sha256:new; run
 check "exits 0" test "$RC" -eq 0
@@ -68,10 +74,11 @@ check "exits 0" test "$RC" -eq 0
 check "runs the new image" test "$(running)" = sha256:new
 
 new_case "bad update is rolled back"
-set_running sha256:old; set_health sha256:new unhealthy; run
+set_running sha256:old; set_health sha256:new unhealthy; make_notifier 0; run
 check "exits 1" test "$RC" -eq 1
 check "restored the previous image" test "$(running)" = sha256:old
 check "reports the rollback" out_has 'rolled back'
+check "failure and rollback notifications include the full revision and workflow run" new_notifications_have_release_details
 
 new_case "rollback still works when the previous image was pruned"
 export FAKE_PRUNE_OLD=1
@@ -144,9 +151,10 @@ check "reported the failure" notes_have 'did not start healthy'
 check "reported the rollback" notes_have 'rolled back'
 
 new_case "a successful deploy is announced with its revision"
-set_running sha256:old; echo "abcdef1234567890" > "$FAKE_DIR/revision"; make_notifier 0; run
+set_running sha256:old; make_notifier 0; run
 check "exits 0" test "$RC" -eq 0
-check "announced the short revision" notes_have 'deployed abcdef1'
+check "announced the full revision" notes_have 'deployed commit abcdef1234567890abcdef1234567890abcdef12'
+check "success notification includes the workflow run" notes_have 'https://github.com/cavelasquez17/shadowcommit/actions/runs/12345'
 
 new_case "a failing notify command does not break the deploy"
 set_running sha256:old; make_notifier 1; run
