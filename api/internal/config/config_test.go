@@ -14,6 +14,45 @@ func TestLoadStaticDir(t *testing.T) {
 	}
 }
 
+func TestLoadUploadDirDefaultsAndOverrides(t *testing.T) {
+	t.Setenv("APP_ENV", "development")
+	t.Setenv("UPLOAD_DIR", "")
+	if got := Load().UploadDir; got != "uploads" {
+		t.Errorf("development UploadDir default = %q, want uploads", got)
+	}
+	t.Setenv("UPLOAD_DIR", "  /tmp/shadowcommit-uploads  ")
+	if got := Load().UploadDir; got != "/tmp/shadowcommit-uploads" {
+		t.Errorf("UploadDir = %q, want trimmed override", got)
+	}
+
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("JWT_SECRET", "test-production-secret")
+	t.Setenv("DEV_LOGIN", "false")
+	t.Setenv("UPLOAD_DIR", "")
+	if got := Load().UploadDir; got != "/data/uploads" {
+		t.Errorf("production UploadDir default = %q, want /data/uploads", got)
+	}
+	t.Setenv("UPLOAD_DIR", "/data/custom-mood-images")
+	if got := Load().UploadDir; got != "/data/custom-mood-images" {
+		t.Errorf("production UploadDir override = %q, want configured path", got)
+	}
+}
+
+func TestProductionUploadDirMustStayInPersistentDataVolume(t *testing.T) {
+	t.Parallel()
+	for _, dir := range []string{"uploads", "/data", "/tmp/mood-images", "/data/../app/static"} {
+		t.Run(dir, func(t *testing.T) {
+			t.Parallel()
+			if err := validateProductionUploadDir(dir); err == nil {
+				t.Errorf("validateProductionUploadDir(%q) unexpectedly succeeded", dir)
+			}
+		})
+	}
+	if err := validateProductionUploadDir("/data/uploads"); err != nil {
+		t.Errorf("valid production photo directory rejected: %v", err)
+	}
+}
+
 func TestLoadDevLoginIsOffUnlessExplicitlyEnabled(t *testing.T) {
 	t.Setenv("DEV_LOGIN", "")
 	t.Setenv("APP_ENV", "development")

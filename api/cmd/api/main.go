@@ -19,6 +19,7 @@ import (
 	"github.com/cavelasquez17/shadowcommit/api/internal/config"
 	"github.com/cavelasquez17/shadowcommit/api/internal/handlers"
 	"github.com/cavelasquez17/shadowcommit/api/internal/jobs"
+	"github.com/cavelasquez17/shadowcommit/api/internal/moodphoto"
 	"github.com/cavelasquez17/shadowcommit/api/internal/seed"
 	"github.com/cavelasquez17/shadowcommit/api/internal/store"
 )
@@ -29,6 +30,7 @@ func main() {
 
 	withDemo := flag.Bool("seed-demo", false, "seed demo users and threads (no-op if users exist)")
 	backupTo := flag.String("backup", "", "write a consistent copy of the database to this file and exit")
+	backupPhotosTo := flag.String("backup-photos", "", "write a matching mood photo archive to this file (requires -backup)")
 	healthcheck := flag.Bool("healthcheck", false, "probe /healthz on the local port and exit 0 if healthy (for container HEALTHCHECK)")
 	flag.Parse()
 
@@ -38,11 +40,24 @@ func main() {
 		if err != nil {
 			log.Fatalf("database: %v", err)
 		}
-		if err := backupDatabase(db, *backupTo); err != nil {
-			log.Fatalf("backup: %v", err)
+		if *backupPhotosTo == "" {
+			if err := backupDatabase(db, *backupTo); err != nil {
+				log.Fatalf("backup: %v", err)
+			}
+		} else {
+			photos := moodphoto.New(cfg.UploadDir)
+			if err := backupPair(db, *backupTo, *backupPhotosTo, photos); err != nil {
+				log.Fatalf("backup: %v", err)
+			}
 		}
 		log.Printf("backup written and verified: %s", *backupTo)
+		if *backupPhotosTo != "" {
+			log.Printf("photo backup written and verified: %s", *backupPhotosTo)
+		}
 		return
+	}
+	if *backupPhotosTo != "" {
+		log.Fatal("-backup-photos requires -backup")
 	}
 
 	if *healthcheck {

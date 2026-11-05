@@ -1,6 +1,6 @@
-# systemd USER unit: writes and verifies a database copy, then prunes old ones (see deploy/backup.sh).
+# systemd USER unit: writes and verifies a database/photo pair, then prunes old ones (see deploy/backup.sh).
 [Unit]
-Description=Back up the ShadowCommit database
+Description=Back up the ShadowCommit database and mood photos
 
 [Service]
 Type=oneshot

@@ -68,7 +68,7 @@ go run ./cmd/api -seed-demo   # + demo personas and threads (no-op if users exis
 go test ./... -race          # run all tests with the race detector
 ```
 
-Key env vars: `PORT`, `APP_ENV`, `DB_DRIVER` (sqlite|postgres), `DATABASE_URL`, `JWT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `WEB_BASE_URL`, `CORS_ORIGINS`, `DEV_LOGIN` (dev only), `INVITE_ONLY`, `SEED_DEMO`.
+Key env vars: `PORT`, `APP_ENV`, `DB_DRIVER` (sqlite|postgres), `DATABASE_URL`, `JWT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `WEB_BASE_URL`, `CORS_ORIGINS`, `DEV_LOGIN` (dev only), `INVITE_ONLY`, `SEED_DEMO`, and optional `UPLOAD_DIR` (defaults to `uploads` in development and `/data/uploads` in production).
 
 ### Web (Node 20+)
 
